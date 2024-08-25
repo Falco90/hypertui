@@ -1,5 +1,3 @@
-use hypersync_client::{format::Address, simple_types::{Log, Transaction}};
-
 pub struct Erc20Transfer {
     pub block: String,
     pub address: String,

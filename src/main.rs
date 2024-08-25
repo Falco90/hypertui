@@ -7,13 +7,12 @@ use std::{
     io::{self, Stdout},
 };
 
-use app::{App, Erc20Transfer};
+use app::App;
 use crossterm::{
-    event::EnableMouseCapture,
+    event::{DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{enable_raw_mode, EnterAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use hypersync_client::format::Hex;
 use ratatui::prelude::{CrosstermBackend, Terminal};
 use ui::render_ui;
 
@@ -30,7 +29,15 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     hypersync::query(&mut app).await;
 
-    let mut res = run_app(&mut terminal, &mut app);
+    let _res = run_app(&mut terminal, &mut app);
+
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
 
     Ok(())
 }
