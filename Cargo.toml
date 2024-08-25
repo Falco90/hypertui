@@ -5,6 +5,9 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.28.1"
+env_logger = "0.11.5"
 hypersync-client = "0.15.1"
 ratatui = "0.28.0"
+ruint = "1.12.3"
 serde_json = "1.0.127"
+tokio = "1.39.3"
