@@ -39,11 +39,21 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
     let mut list_items = Vec::<ListItem>::new();
 
-    for erc20transfer in &app.erc20transfers {
+    for erc20transfer in &app.erc20_transfers {
         list_items.push(ListItem::new(Line::from(Span::styled(
             format!(
-                "block: {}, from: {} to: {} value: {}",
+                "Erc20 transfer: block: {}, from: {} to: {} value: {}",
                 erc20transfer.block, erc20transfer.from, erc20transfer.to, erc20transfer.amount
+            ),
+            Style::default().fg(Color::Yellow),
+        ))));
+    }
+
+    for regular_transfer in &app.regular_transfers {
+        list_items.push(ListItem::new(Line::from(Span::styled(
+            format!(
+                "Regular transfer: block: {}, from: {} to: {} value: {}",
+                regular_transfer.block, regular_transfer.from, regular_transfer.to, regular_transfer.value
             ),
             Style::default().fg(Color::Yellow),
         ))));
