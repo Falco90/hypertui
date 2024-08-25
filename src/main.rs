@@ -7,9 +7,9 @@ use std::{
     io::{self, Stdout},
 };
 
-use app::App;
+use app::{App, CurrentScreen};
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -29,7 +29,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     hypersync::query(&mut app).await;
 
-    let _res = run_app(&mut terminal, &mut app);
+    let res = run_app(&mut terminal, &mut app);
 
     disable_raw_mode()?;
     execute!(
@@ -39,11 +39,70 @@ async fn main() -> Result<(), Box<dyn Error>> {
     )?;
     terminal.show_cursor()?;
 
+    if let Ok(make_pdf) = res {
+        if make_pdf {
+            println!("user wants to write to PDF");
+        }
+    } else if let Err(err) = res {
+        println!("{err:?}");
+    }
+
     Ok(())
 }
 
 fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> io::Result<bool> {
     loop {
         terminal.draw(|frame| render_ui(frame, app))?;
+
+        if let Event::Key(key) = event::read()? {
+            if key.kind == event::KeyEventKind::Release {
+                continue;
+            }
+            match app.current_screen {
+                CurrentScreen::Startup => match key.code {
+                    KeyCode::Char('c') => {
+                        app.current_screen = CurrentScreen::QueryBuilder;
+                    }
+                    KeyCode::Char('q') => {
+                        app.current_screen = CurrentScreen::Exiting;
+                    }
+                    _ => {}
+                },
+                CurrentScreen::Main => match key.code {
+                    KeyCode::Char('c') => {
+                        app.current_screen = CurrentScreen::QueryBuilder;
+                    }
+                    KeyCode::Char('q') => {
+                        app.current_screen = CurrentScreen::Exiting;
+                    }
+                    KeyCode::Left => {
+                        // go to left widget
+                    }
+                    KeyCode::Right => {
+                        // go to right widget
+                    }
+                    KeyCode::Tab => {
+                        app.tabs.next();
+                    }
+                    KeyCode::Up => {
+                        // Scroll up in current widget
+                    }
+                    KeyCode::Down => {
+                        // Scroll down in current widget
+                    }
+                    _ => {}
+                },
+                CurrentScreen::Exiting => match key.code {
+                    KeyCode::Char('y') => {
+                        return Ok(true);
+                    }
+                    KeyCode::Char('n') | KeyCode::Char('q') => {
+                        return Ok(false);
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
     }
 }

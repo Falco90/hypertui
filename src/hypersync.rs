@@ -9,7 +9,7 @@ fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
 
-pub async fn query(app: &mut App) {
+pub async fn query<'a>(app: &mut App<'a>) {
     let client = Client::new(ClientConfig {
         url: Some("https://eth.hypersync.xyz".parse().unwrap()),
         ..Default::default()

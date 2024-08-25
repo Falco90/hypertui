@@ -19,7 +19,14 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         .split(frame.area());
 
     render_title(frame, app, chunks[0]);
-    render_list(frame, app, chunks[1])
+
+    match app.tabs.index {
+        0 => render_regular_tab(frame, app, chunks[1]),
+        1 => render_erc20_tab(frame, app, chunks[1]),
+        2 => render_erc721_tab(frame, app, chunks[1]),
+        _ => {}
+    }
+    // render_list(frame, app, chunks[1]);
 }
 
 fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -53,7 +60,10 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
         list_items.push(ListItem::new(Line::from(Span::styled(
             format!(
                 "Regular transfer: block: {}, from: {} to: {} value: {}",
-                regular_transfer.block, regular_transfer.from, regular_transfer.to, regular_transfer.value
+                regular_transfer.block,
+                regular_transfer.from,
+                regular_transfer.to,
+                regular_transfer.value
             ),
             Style::default().fg(Color::Yellow),
         ))));
@@ -65,3 +75,23 @@ fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}
