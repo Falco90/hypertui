@@ -89,7 +89,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                     let decoded_log = decoded_log.unwrap();
                     app.erc20_transfers.push(Erc20Transfer {
                         block: log.block_number.unwrap().to_string(),
-                        address: log.address.unwrap().encode_hex(),
+                        contract: log.address.unwrap().encode_hex(),
                         from: decoded_log.indexed[0].as_address().unwrap().to_string(),
                         to: decoded_log.indexed[0].as_address().unwrap().to_string(),
                         amount: decoded_log.body[0].as_uint().unwrap().0.to_string(),

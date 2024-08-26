@@ -1,8 +1,8 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    text::{self, Line, Span, Text},
+    widgets::{Block, Borders, Cell, HighlightSpacing, List, ListItem, Paragraph, Row, Table, Tabs},
     Frame,
 };
 
@@ -13,20 +13,21 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Length(3),
+            Constraint::Length(3),
             Constraint::Min(1),
             Constraint::Length(3),
         ])
         .split(frame.area());
 
     render_title(frame, app, chunks[0]);
+    render_tabs(frame, app, chunks[1]);
 
     match app.tabs.index {
-        0 => render_regular_tab(frame, app, chunks[1]),
-        1 => render_erc20_tab(frame, app, chunks[1]),
-        2 => render_erc721_tab(frame, app, chunks[1]),
+        0 => render_regular_tab(frame, app, chunks[2]),
+        1 => render_erc20_tab(frame, app, chunks[2]),
+        // 2 => render_erc721_tab(frame, app, chunks[1]),
         _ => {}
     }
-    // render_list(frame, app, chunks[1]);
 }
 
 fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -43,35 +44,76 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(title, area);
 }
 
-fn render_list(frame: &mut Frame, app: &mut App, area: Rect) {
-    let mut list_items = Vec::<ListItem>::new();
+fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
+    let tabs = app
+        .tabs
+        .titles
+        .iter()
+        .map(|t| text::Line::from(Span::styled(*t, Style::default().fg(Color::Green))))
+        .collect::<Tabs>()
+        .block(Block::bordered())
+        .highlight_style(Style::default().fg(Color::Yellow))
+        .select(app.tabs.index);
 
-    for erc20transfer in &app.erc20_transfers {
-        list_items.push(ListItem::new(Line::from(Span::styled(
-            format!(
-                "Erc20 transfer: block: {}, from: {} to: {} value: {}",
-                erc20transfer.block, erc20transfer.from, erc20transfer.to, erc20transfer.amount
-            ),
-            Style::default().fg(Color::Yellow),
-        ))));
-    }
+    frame.render_widget(tabs, area);
+}
 
-    for regular_transfer in &app.regular_transfers {
-        list_items.push(ListItem::new(Line::from(Span::styled(
-            format!(
-                "Regular transfer: block: {}, from: {} to: {} value: {}",
-                regular_transfer.block,
-                regular_transfer.from,
-                regular_transfer.to,
-                regular_transfer.value
-            ),
-            Style::default().fg(Color::Yellow),
-        ))));
-    }
+fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
 
-    let list = List::new(list_items);
+    let header = ["Block", "From", "To", "Value"]
+        .into_iter()
+        .map(Cell::from)
+        .collect::<Row>()
+        .style(header_style)
+        .height(2);
+    let rows = app.regular_transfers.iter().enumerate().map(|(i, data)| {
+        let item = [&data.block, &data.from, &data.to, &data.value];
+        item.into_iter()
+            .map(|content| Cell::from(Text::from(format!("{content}"))))
+            .collect::<Row>()
+            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+            .height(1)
+    });
+    let table = Table::new(rows, [
+        Constraint::Length(200),
+        Constraint::Length(40),
+        Constraint::Length(40),
+        Constraint::Length(40),
+    ])
+        .header(header)
+        .block(Block::bordered())
+        .highlight_spacing(HighlightSpacing::Always);
+    frame.render_widget(table, area);
+}
 
-    frame.render_widget(list, area);
+fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+
+    let header = ["Block", "Contract", "From", "To", "Value"]
+        .into_iter()
+        .map(Cell::from)
+        .collect::<Row>()
+        .style(header_style)
+        .height(2);
+    let rows = app.erc20_transfers.iter().enumerate().map(|(i, data)| {
+        let item = [&data.block, &data.contract, &data.from, &data.to, &data.amount];
+        item.into_iter()
+            .map(|content| Cell::from(Text::from(format!("{content}"))))
+            .collect::<Row>()
+            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+            .height(1)
+    });
+    let table = Table::new(rows, [
+        Constraint::Length(200),
+        Constraint::Length(200),
+        Constraint::Length(200),
+        Constraint::Length(200),
+    ])
+        .header(header)
+        .block(Block::bordered())
+        .highlight_spacing(HighlightSpacing::Always);
+    frame.render_widget(table, area);
 }
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {}

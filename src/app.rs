@@ -1,6 +1,6 @@
 pub struct Erc20Transfer {
     pub block: String,
-    pub address: String,
+    pub contract: String,
     pub to: String,
     pub from: String,
     pub amount: String
@@ -53,7 +53,7 @@ pub struct RegularTransfer {
 impl<'a> App<'a> {
     pub fn new() -> Self {
         App {
-            current_screen: CurrentScreen::Startup,
+            current_screen: CurrentScreen::Main,
             tabs: TabsState::new(vec!["regular transfers", "erc20 transfers", "erc721 transfers"]),
             widget_index: 0,
             regular_transfers: Vec::new(),
