@@ -2,7 +2,9 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Style},
     text::{self, Line, Span, Text},
-    widgets::{Block, Borders, Cell, HighlightSpacing, List, ListItem, Paragraph, Row, Table, Tabs},
+    widgets::{
+        Block, Borders, Cell, HighlightSpacing, List, ListItem, Paragraph, Row, Table, Tabs,
+    },
     Frame,
 };
 
@@ -25,7 +27,7 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
     match app.tabs.index {
         0 => render_regular_tab(frame, app, chunks[2]),
         1 => render_erc20_tab(frame, app, chunks[2]),
-        // 2 => render_erc721_tab(frame, app, chunks[1]),
+        2 => render_erc721_tab(frame, app, chunks[2]),
         _ => {}
     }
 }
@@ -75,44 +77,89 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
             .height(1)
     });
-    let table = Table::new(rows, [
-        Constraint::Length(200),
-        Constraint::Length(40),
-        Constraint::Length(40),
-        Constraint::Length(40),
-    ])
-        .header(header)
-        .block(Block::bordered())
-        .highlight_spacing(HighlightSpacing::Always);
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(200),
+            Constraint::Length(40),
+            Constraint::Length(40),
+            Constraint::Length(40),
+        ],
+    )
+    .header(header)
+    .block(Block::bordered())
+    .highlight_spacing(HighlightSpacing::Always);
     frame.render_widget(table, area);
 }
 
 fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
 
-    let header = ["Block", "Contract", "From", "To", "Value"]
+    let header = ["Block", "From", "To", "Value"]
         .into_iter()
         .map(Cell::from)
         .collect::<Row>()
         .style(header_style)
         .height(2);
     let rows = app.erc20_transfers.iter().enumerate().map(|(i, data)| {
-        let item = [&data.block, &data.contract, &data.from, &data.to, &data.amount];
+        let item = [&data.block, &data.from, &data.to, &data.amount];
         item.into_iter()
             .map(|content| Cell::from(Text::from(format!("{content}"))))
             .collect::<Row>()
             .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
             .height(1)
     });
-    let table = Table::new(rows, [
-        Constraint::Length(200),
-        Constraint::Length(200),
-        Constraint::Length(200),
-        Constraint::Length(200),
-    ])
-        .header(header)
-        .block(Block::bordered())
-        .highlight_spacing(HighlightSpacing::Always);
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(200),
+            Constraint::Length(200),
+            Constraint::Length(200),
+            Constraint::Length(200),
+        ],
+    )
+    .header(header)
+    .block(Block::bordered())
+    .highlight_spacing(HighlightSpacing::Always);
+    frame.render_widget(table, area);
+}
+
+fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+
+    let header = ["Block", "Contract", "From", "To", "Token Id"]
+        .into_iter()
+        .map(Cell::from)
+        .collect::<Row>()
+        .style(header_style)
+        .height(2);
+    let rows = app.erc721_transfers.iter().enumerate().map(|(i, data)| {
+        let item = [
+            &data.block,
+            &data.contract,
+            &data.from,
+            &data.to,
+            &data.token_id,
+        ];
+        item.into_iter()
+            .map(|content| Cell::from(Text::from(format!("{content}"))))
+            .collect::<Row>()
+            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+            .height(1)
+    });
+    let table = Table::new(
+        rows,
+        [
+            Constraint::Length(200),
+            Constraint::Length(200),
+            Constraint::Length(200),
+            Constraint::Length(200),
+            Constraint::Length(200),
+        ],
+    )
+    .header(header)
+    .block(Block::bordered())
+    .highlight_spacing(HighlightSpacing::Always);
     frame.render_widget(table, area);
 }
 

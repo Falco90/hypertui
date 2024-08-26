@@ -6,6 +6,14 @@ pub struct Erc20Transfer {
     pub amount: String
 }
 
+pub struct Erc721Transfer {
+    pub block: String,
+    pub contract: String,
+    pub to: String,
+    pub from: String,
+    pub token_id: String
+}
+
 pub enum CurrentScreen {
     Startup,
     QueryBuilder,
@@ -40,7 +48,8 @@ pub struct App<'a> {
     pub tabs: TabsState<'a>,
     pub widget_index: u8,
     pub regular_transfers: Vec<RegularTransfer>,
-    pub erc20_transfers: Vec<Erc20Transfer>
+    pub erc20_transfers: Vec<Erc20Transfer>,
+    pub erc721_transfers: Vec<Erc721Transfer>
 }
 
 pub struct RegularTransfer {
@@ -57,7 +66,8 @@ impl<'a> App<'a> {
             tabs: TabsState::new(vec!["regular transfers", "erc20 transfers", "erc721 transfers"]),
             widget_index: 0,
             regular_transfers: Vec::new(),
-            erc20_transfers: Vec::new()
+            erc20_transfers: Vec::new(),
+            erc721_transfers: Vec::new()
         }
     }
 }
