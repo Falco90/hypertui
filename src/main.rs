@@ -85,10 +85,10 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> 
                         app.tabs.next();
                     }
                     KeyCode::Up => {
-                        // Scroll up in current widget
+                        app.previous_table_row();
                     }
                     KeyCode::Down => {
-                        // Scroll down in current widget
+                        app.next_table_row();
                     }
                     _ => {}
                 },

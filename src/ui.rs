@@ -1,8 +1,12 @@
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Style, Stylize},
+    symbols::Marker,
     text::{self, Span, Text},
-    widgets::{Block, Borders, Cell, HighlightSpacing, Paragraph, Row, Table, Tabs},
+    widgets::{
+        block::Title, Axis, Block, Borders, Cell, Chart, Dataset, GraphType, HighlightSpacing,
+        Paragraph, Row, Table, Tabs,
+    },
     Frame,
 };
 
@@ -79,6 +83,8 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .split(chunks[1]);
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+    let selected_style = Style::default()
+        .fg(Color::DarkGray).bg(Color::Yellow);
 
     let header = ["Hash", "From", "To", "Value"]
         .into_iter()
@@ -105,8 +111,9 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     )
     .header(header)
     .block(Block::bordered())
+    .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
-    frame.render_widget(table, chunks[0]);
+    frame.render_stateful_widget(table, chunks[0], &mut app.table_state);
 
     render_tansaction_details(frame, app, right_panel[0]);
 }
@@ -183,8 +190,7 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
-    app.selected_transaction_index = Some(0);
-    if let Some(selected_transaction_index) = app.selected_transaction_index {
+    if let Some(index) = app.table_state.selected() {
         match app.tabs.index {
             0 => {
                 let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
@@ -196,7 +202,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     .style(header_style)
                     .height(2);
 
-                let selected_transaction = &app.regular_transfers[selected_transaction_index];
+                let selected_transaction = &app.regular_transfers[index];
                 let fields = [
                     &selected_transaction.hash,
                     &selected_transaction.block,
@@ -212,8 +218,9 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                         .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
                         .height(1)
                 });
-                let table =
-                    Table::new(rows, [Constraint::Percentage(100)]).header(header).block(Block::bordered());
+                let table = Table::new(rows, [Constraint::Percentage(100)])
+                    .header(header)
+                    .block(Block::bordered());
 
                 frame.render_widget(table, area);
             }
