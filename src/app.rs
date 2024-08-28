@@ -1,4 +1,7 @@
+use ratatui::widgets::ScrollbarState;
+
 pub struct Erc20Transfer {
+    pub hash: String,
     pub block: String,
     pub contract: String,
     pub to: String,
@@ -7,6 +10,7 @@ pub struct Erc20Transfer {
 }
 
 pub struct Erc721Transfer {
+    pub hash: String,
     pub block: String,
     pub contract: String,
     pub to: String,
@@ -46,6 +50,7 @@ impl<'a> TabsState<'a> {
 pub struct App<'a> {
     pub current_screen: CurrentScreen,
     pub tabs: TabsState<'a>,
+    pub selected_transaction_index: Option<usize>,
     pub widget_index: u8,
     pub regular_transfers: Vec<RegularTransfer>,
     pub erc20_transfers: Vec<Erc20Transfer>,
@@ -53,6 +58,7 @@ pub struct App<'a> {
 }
 
 pub struct RegularTransfer {
+    pub hash: String,
     pub block: String,
     pub to: String,
     pub from: String,
@@ -64,6 +70,7 @@ impl<'a> App<'a> {
         App {
             current_screen: CurrentScreen::Main,
             tabs: TabsState::new(vec!["regular transfers", "erc20 transfers", "erc721 transfers"]),
+            selected_transaction_index: None,
             widget_index: 0,
             regular_transfers: Vec::new(),
             erc20_transfers: Vec::new(),

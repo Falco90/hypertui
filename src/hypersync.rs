@@ -47,6 +47,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
         ],
         "field_selection": {
             "log": Value::Array(vec![
+                "transaction_hash".into(),
                 "block_number".into(),
                 "address".into(),
                 "data".into(),
@@ -56,6 +57,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                 "topic3".into(),
             ]),
             "transaction": [
+                "hash",
                 "block_number",
                 "from",
                 "to",
@@ -93,6 +95,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                                 Some(_) => {
                                     let decoded_log = decoded_log.unwrap();
                                     app.erc20_transfers.push(Erc20Transfer {
+                                        hash: log.transaction_hash.unwrap().encode_hex(),
                                         block: log.block_number.unwrap().to_string(),
                                         contract: log.address.unwrap().encode_hex(),
                                         from: decoded_log.indexed[0]
@@ -114,6 +117,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                                     if let Ok(decoded_log) = erc721_decoder.decode_log(&log) {
                                         let decoded_log = decoded_log.unwrap();
                                         app.erc721_transfers.push(Erc721Transfer {
+                                            hash: log.transaction_hash.unwrap().encode_hex(),
                                             block: log.block_number.unwrap().to_string(),
                                             contract: log.address.unwrap().encode_hex(),
                                             from: decoded_log.indexed[0]
@@ -142,12 +146,15 @@ pub async fn query<'a>(app: &mut App<'a>) {
 
         for batch in res.data.transactions {
             for tx in batch {
-                app.regular_transfers.push(RegularTransfer {
+                let regular_transfer = RegularTransfer {
+                    hash: tx.hash.unwrap().encode_hex(),
                     block: tx.block_number.unwrap().to_string(),
                     from: tx.from.unwrap().encode_hex(),
                     to: tx.to.unwrap().encode_hex(),
                     value: tx.value.unwrap().encode_hex(),
-                });
+                };
+
+                app.regular_transfers.push(regular_transfer);
             }
         }
     }
