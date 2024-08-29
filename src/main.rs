@@ -27,9 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut app = App::new();
 
-    hypersync::query(&mut app).await;
-
-    let res = run_app(&mut terminal, &mut app);
+    let res = run_app(&mut terminal, &mut app).await;
 
     disable_raw_mode()?;
     execute!(
@@ -39,20 +37,21 @@ async fn main() -> Result<(), Box<dyn Error>> {
     )?;
     terminal.show_cursor()?;
 
-    if let Ok(make_pdf) = res {
-        if make_pdf {
-            println!("user wants to write to PDF");
-        }
-    } else if let Err(err) = res {
-        println!("{err:?}");
-    }
-
     Ok(())
 }
 
-fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> io::Result<bool> {
+async fn run_app<'a>(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    app: &mut App<'a>,
+) -> io::Result<bool> {
     loop {
         terminal.draw(|frame| render_ui(frame, app))?;
+
+        if let CurrentScreen::Loading = &app.current_screen {
+            hypersync::query(app).await;
+            app.set_scroll_state();
+            app.current_screen = CurrentScreen::Main;
+        }
 
         if let Event::Key(key) = event::read()? {
             if key.kind == event::KeyEventKind::Release {
@@ -74,13 +73,7 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> 
                     }
                     KeyCode::Char('q') => {
                         app.current_screen = CurrentScreen::Exiting;
-                    }
-                    KeyCode::Left => {
-                        // go to left widget
-                    }
-                    KeyCode::Right => {
-                        // go to right widget
-                    }
+                    },
                     KeyCode::Tab => {
                         app.tabs.next();
                     }
@@ -89,6 +82,15 @@ fn run_app(terminal: &mut Terminal<CrosstermBackend<Stdout>>, app: &mut App) -> 
                     }
                     KeyCode::Down => {
                         app.next_table_row();
+                    }
+                    _ => {}
+                },
+                CurrentScreen::QueryBuilder => match key.code {
+                    KeyCode::Char('y') => {
+                        app.current_screen = CurrentScreen::Loading;
+                    }
+                    KeyCode::Char('q') => {
+                        app.current_screen = CurrentScreen::Exiting;
                     }
                     _ => {}
                 },

@@ -1,11 +1,10 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style, Stylize},
     symbols::Marker,
     text::{self, Span, Text},
     widgets::{
-        block::Title, Axis, Block, Borders, Cell, Chart, Dataset, GraphType, HighlightSpacing,
-        Paragraph, Row, Table, Tabs,
+        block::Title, Axis, Block, Borders, Cell, Chart, Dataset, GraphType, HighlightSpacing, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table, Tabs
     },
     Frame,
 };
@@ -26,7 +25,7 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
     render_title(frame, app, chunks[0]);
 
     match app.current_screen {
-        CurrentScreen::Startup => {}
+        CurrentScreen::Startup => render_startup_screen(frame, app, chunks[2]),
         CurrentScreen::Main => {
             render_tabs(frame, app, chunks[1]);
 
@@ -37,9 +36,11 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
                 _ => {}
             }
         }
-        CurrentScreen::QueryBuilder => {}
+        CurrentScreen::QueryBuilder => {
+            render_query_screen(frame, app, chunks[2]);
+        }
         CurrentScreen::Exiting => {}
-        CurrentScreen::Loading => {}
+        CurrentScreen::Loading => render_loading_screen(frame, app, chunks[2]),
     }
 }
 
@@ -50,6 +51,48 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let title = Paragraph::new(Text::styled(
         "Hypertui Dashboard",
+        Style::default().fg(Color::Green),
+    ))
+    .block(title_block);
+
+    frame.render_widget(title, area);
+}
+
+fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+    let title_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let title = Paragraph::new(Text::styled(
+        "Loading...",
+        Style::default().fg(Color::Green),
+    ))
+    .block(title_block);
+
+    frame.render_widget(title, area);
+}
+
+fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+    let title_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let title = Paragraph::new(Text::styled(
+        "Startup screen",
+        Style::default().fg(Color::Green),
+    ))
+    .block(title_block);
+
+    frame.render_widget(title, area);
+}
+
+fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+    let title_block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default());
+
+    let title = Paragraph::new(Text::styled(
+        "Query builder",
         Style::default().fg(Color::Green),
     ))
     .block(title_block);
@@ -83,8 +126,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .split(chunks[1]);
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
-    let selected_style = Style::default()
-        .fg(Color::DarkGray).bg(Color::Yellow);
+    let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
 
     let header = ["Hash", "From", "To", "Value"]
         .into_iter()
@@ -100,6 +142,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
             .height(1)
     });
+
     let table = Table::new(
         rows,
         [
@@ -110,12 +153,27 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         ],
     )
     .header(header)
-    .block(Block::bordered())
+    .block(Block::bordered().padding(Padding::horizontal(2)))
     .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
     frame.render_stateful_widget(table, chunks[0], &mut app.table_state);
 
+    render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
+}
+
+fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
+    frame.render_stateful_widget(
+        Scrollbar::default()
+            .orientation(ScrollbarOrientation::VerticalRight)
+            .begin_symbol(None)
+            .end_symbol(None),
+        area.inner(Margin {
+            vertical: 3,
+            horizontal: 1
+        }),
+        &mut app.scroll_state,
+    );
 }
 
 fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {

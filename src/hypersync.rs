@@ -5,7 +5,7 @@ use hypersync_client::{
 };
 use serde_json::Value;
 
-use crate::app::{App, Erc20Transfer, Erc721Transfer, RegularTransfer};
+use crate::app::{App, CurrentScreen, Erc20Transfer, Erc721Transfer, RegularTransfer};
 fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
@@ -68,8 +68,6 @@ pub async fn query<'a>(app: &mut App<'a>) {
     .unwrap();
 
     let client = Arc::new(client);
-
-    println!("Fetching data through hypersync...");
 
     let mut receiver = client.stream(query, StreamConfig::default()).await.unwrap();
 
