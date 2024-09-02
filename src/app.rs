@@ -1,4 +1,51 @@
-use ratatui::widgets::{ScrollbarState, TableState};
+use ratatui::widgets::{ListState, ScrollbarState, TableState};
+
+const LINE_HEIGHT: usize = 1;
+
+pub struct WalletQuery {
+    pub address: String,
+    pub chain: String,
+    pub regular_transfers: bool,
+    pub erc20_transfers: bool,
+    pub erc721_transfers: bool,
+    pub index: usize,
+}
+
+impl WalletQuery {
+    fn new() -> Self {
+        WalletQuery {
+            address: String::new(),
+            chain: String::new(),
+            regular_transfers: true,
+            erc20_transfers: true,
+            erc721_transfers: false,
+            index: 0,
+        }
+    }
+}
+
+pub struct QueryListState<'b> {
+    items: Vec<&'b str>,
+    index: usize,
+}
+
+impl<'b> QueryListState<'b> {
+    pub fn new(items: Vec<&'b str>) -> Self {
+        Self { items, index: 0 }
+    }
+
+    pub fn next(&mut self) {
+        self.index = (self.index + 1) % self.items.len();
+    }
+
+    pub fn previous(&mut self) {
+        if self.index > 0 {
+            self.index -= 1;
+        } else {
+            self.index = self.items.len() - 1;
+        }
+    }
+}
 
 pub struct Erc20Transfer {
     pub hash: String,
@@ -49,8 +96,12 @@ impl<'a> TabsState<'a> {
 }
 pub struct App<'a> {
     pub current_screen: CurrentScreen,
-    pub tabs: TabsState<'a>,
+    pub currently_editing: bool,
+    pub query: WalletQuery,
+    pub transaction_tabs: TabsState<'a>,
     pub table_state: TableState,
+    pub query_tabs: TabsState<'a>,
+    pub query_state: ListState,
     pub scroll_state: ScrollbarState,
     pub regular_transfers: Vec<RegularTransfer>,
     pub erc20_transfers: Vec<Erc20Transfer>,
@@ -69,13 +120,17 @@ impl<'a> App<'a> {
     pub fn new() -> Self {
         App {
             current_screen: CurrentScreen::Startup,
-            tabs: TabsState::new(vec![
+            currently_editing: false,
+            transaction_tabs: TabsState::new(vec![
                 "regular transfers",
                 "erc20 transfers",
                 "erc721 transfers",
             ]),
+            query_tabs: TabsState::new(vec!["Address", "Chain", "Types"]),
             table_state: TableState::default().with_selected(0),
             scroll_state: ScrollbarState::new(0),
+            query: WalletQuery::new(),
+            query_state: ListState::default().with_selected(Some(0)),
             regular_transfers: Vec::new(),
             erc20_transfers: Vec::new(),
             erc721_transfers: Vec::new(),
@@ -98,14 +153,14 @@ impl<'a> App<'a> {
             None => 0,
         };
         self.table_state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i);
+        self.scroll_state = self.scroll_state.position(i * LINE_HEIGHT);
     }
 
     pub fn previous_table_row(&mut self) {
         let i = match self.table_state.selected() {
             Some(i) => {
                 if i == 0 {
-                    self.regular_transfers.len() - 1
+                    self.regular_transfers.len() - 1 * LINE_HEIGHT
                 } else {
                     i - 1
                 }
@@ -113,6 +168,6 @@ impl<'a> App<'a> {
             None => 0,
         };
         self.table_state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i);
+        self.scroll_state = self.scroll_state.position(i * LINE_HEIGHT);
     }
 }

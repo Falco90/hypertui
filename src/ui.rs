@@ -1,21 +1,20 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style, Stylize},
-    symbols::Marker,
-    text::{self, Span, Text},
+    layout::{Constraint, Direction, Layout, Margin, Rect},
+    style::{Color, Style},
+    text::{self, Line, Span, Text},
     widgets::{
-        block::Title, Axis, Block, Borders, Cell, Chart, Dataset, GraphType, HighlightSpacing, Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table, Tabs
+        Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
+        ScrollbarOrientation, Table, Tabs,
     },
     Frame,
 };
 
-use crate::app::{App, CurrentScreen, RegularTransfer};
+use crate::app::{App, CurrentScreen};
 
 pub fn render_ui(frame: &mut Frame, app: &mut App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),
             Constraint::Length(3),
             Constraint::Min(1),
             Constraint::Length(3),
@@ -25,22 +24,31 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
     render_title(frame, app, chunks[0]);
 
     match app.current_screen {
-        CurrentScreen::Startup => render_startup_screen(frame, app, chunks[2]),
+        CurrentScreen::Startup => render_startup_screen(frame, app, chunks[1]),
         CurrentScreen::Main => {
-            render_tabs(frame, app, chunks[1]);
-
-            match app.tabs.index {
-                0 => render_regular_tab(frame, app, chunks[2]),
-                1 => render_erc20_tab(frame, app, chunks[2]),
-                2 => render_erc721_tab(frame, app, chunks[2]),
-                _ => {}
-            }
+            render_main_screen(frame, app, chunks[1]);
         }
         CurrentScreen::QueryBuilder => {
-            render_query_screen(frame, app, chunks[2]);
+            render_query_screen(frame, app, chunks[1]);
         }
         CurrentScreen::Exiting => {}
-        CurrentScreen::Loading => render_loading_screen(frame, app, chunks[2]),
+        CurrentScreen::Loading => render_loading_screen(frame, app, chunks[1]),
+    }
+}
+
+fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Length(3), Constraint::Min(1)])
+        .split(area);
+
+    render_tabs(frame, app, chunks[0]);
+
+    match app.transaction_tabs.index {
+        0 => render_regular_tab(frame, app, chunks[1]),
+        1 => render_erc20_tab(frame, app, chunks[1]),
+        2 => render_erc721_tab(frame, app, chunks[1]),
+        _ => {}
     }
 }
 
@@ -87,29 +95,34 @@ fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let title_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
+    let list_items = vec![
+        ListItem::new(Line::from(Span::styled(
+            format!("Wallet Address:   {}", app.query.address),
+            Style::default().fg(Color::Yellow),
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Chain:   {}", app.query.chain),
+            Style::default().fg(Color::Yellow),
+        ))),
+    ];
 
-    let title = Paragraph::new(Text::styled(
-        "Query builder",
-        Style::default().fg(Color::Green),
-    ))
-    .block(title_block);
+    let list = List::new(list_items)
+        .highlight_symbol(">")
+        .highlight_spacing(HighlightSpacing::Always);
 
-    frame.render_widget(title, area);
+    frame.render_stateful_widget(list, area, &mut app.query_state);
 }
 
 fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
     let tabs = app
-        .tabs
+        .transaction_tabs
         .titles
         .iter()
         .map(|t| text::Line::from(Span::styled(*t, Style::default().fg(Color::Green))))
         .collect::<Tabs>()
         .block(Block::bordered())
         .highlight_style(Style::default().fg(Color::Yellow))
-        .select(app.tabs.index);
+        .select(app.transaction_tabs.index);
 
     frame.render_widget(tabs, area);
 }
@@ -117,7 +130,7 @@ fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .constraints([Constraint::Percentage(45), Constraint::Percentage(55)])
         .split(area);
 
     let right_panel = Layout::default()
@@ -170,7 +183,7 @@ fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
             .end_symbol(None),
         area.inner(Margin {
             vertical: 3,
-            horizontal: 1
+            horizontal: 1,
         }),
         &mut app.scroll_state,
     );
@@ -249,7 +262,7 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
     if let Some(index) = app.table_state.selected() {
-        match app.tabs.index {
+        match app.transaction_tabs.index {
             0 => {
                 let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
 
@@ -262,23 +275,23 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
 
                 let selected_transaction = &app.regular_transfers[index];
                 let fields = [
-                    &selected_transaction.hash,
-                    &selected_transaction.block,
-                    &selected_transaction.from,
-                    &selected_transaction.to,
-                    &selected_transaction.value,
+                    ("Hash:   ", &selected_transaction.hash),
+                    ("Block:  ", &selected_transaction.block),
+                    ("From:   ", &selected_transaction.from),
+                    ("To:     ", &selected_transaction.to),
+                    ("Value:  ", &selected_transaction.value),
                 ];
                 let rows = fields.iter().enumerate().map(|(i, data)| {
-                    let item = [data];
+                    let item = [format!("{} {}", data.0, data.1)];
                     item.into_iter()
-                        .map(|content| Cell::from(Text::from(format!("{content}"))))
+                        .map(|content| Cell::from(Text::from(content)))
                         .collect::<Row>()
                         .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
                         .height(1)
                 });
                 let table = Table::new(rows, [Constraint::Percentage(100)])
                     .header(header)
-                    .block(Block::bordered());
+                    .block(Block::bordered().padding(Padding::horizontal(2)));
 
                 frame.render_widget(table, area);
             }

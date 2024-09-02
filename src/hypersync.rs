@@ -5,7 +5,7 @@ use hypersync_client::{
 };
 use serde_json::Value;
 
-use crate::app::{App, CurrentScreen, Erc20Transfer, Erc721Transfer, RegularTransfer};
+use crate::app::{App, Erc20Transfer, Erc721Transfer, RegularTransfer};
 fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
