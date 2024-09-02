@@ -17,7 +17,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
     })
     .unwrap();
 
-    let addresses = vec!["0xad4010aC206b14D66999b4BF9b80C6bc97B60b9A"];
+    let addresses = vec![app.query.address.clone()];
 
     let address_topic_filter: Vec<String> = addresses.iter().map(|a| address_to_topic(a)).collect();
 
