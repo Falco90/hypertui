@@ -8,6 +8,7 @@ use ratatui::{
     },
     Frame,
 };
+use ethers::core::utils::format_ether;
 
 use crate::app::{App, CurrentScreen};
 
@@ -148,7 +149,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .style(header_style)
         .height(2);
     let rows = app.regular_transfers.iter().enumerate().map(|(i, data)| {
-        let item = [&data.hash, &data.from, &data.to, &data.value];
+        let item = [&data.hash, &data.from, &data.to, &format_ether(data.value)[..5]];
         item.into_iter()
             .map(|content| Cell::from(Text::from(format!("{content}"))))
             .collect::<Row>()
@@ -275,11 +276,11 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
 
                 let selected_transaction = &app.regular_transfers[index];
                 let fields = [
-                    ("Hash:   ", &selected_transaction.hash),
-                    ("Block:  ", &selected_transaction.block),
-                    ("From:   ", &selected_transaction.from),
-                    ("To:     ", &selected_transaction.to),
-                    ("Value:  ", &selected_transaction.value),
+                    ("Hash:   ", selected_transaction.hash.as_str()),
+                    ("Block:  ", selected_transaction.block.as_str()),
+                    ("From:   ", selected_transaction.from.as_str()),
+                    ("To:     ", selected_transaction.to.as_str()),
+                    ("Value:  ", &format_ether(selected_transaction.value)[..5]),
                 ];
                 let rows = fields.iter().enumerate().map(|(i, data)| {
                     let item = [format!("{} {}", data.0, data.1)];

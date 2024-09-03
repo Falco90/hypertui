@@ -3,6 +3,7 @@ use std::sync::Arc;
 use hypersync_client::{
     format::Hex, net_types::Query, Client, ClientConfig, Decoder, StreamConfig,
 };
+use ethers::core::types::U256;
 use serde_json::Value;
 
 use crate::app::{App, Erc20Transfer, Erc721Transfer, RegularTransfer};
@@ -149,7 +150,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                     block: tx.block_number.unwrap().to_string(),
                     from: tx.from.unwrap().encode_hex(),
                     to: tx.to.unwrap().encode_hex(),
-                    value: tx.value.unwrap().encode_hex(),
+                    value: U256::from(tx.value.unwrap().as_ref())
                 };
 
                 app.regular_transfers.push(regular_transfer);

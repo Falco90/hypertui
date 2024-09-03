@@ -1,4 +1,5 @@
 use ratatui::widgets::{ListState, ScrollbarState, TableState};
+use ethers::core::types::U256;
 
 const LINE_HEIGHT: usize = 1;
 
@@ -113,7 +114,7 @@ pub struct RegularTransfer {
     pub block: String,
     pub to: String,
     pub from: String,
-    pub value: String,
+    pub value: U256,
 }
 
 impl<'a> App<'a> {
