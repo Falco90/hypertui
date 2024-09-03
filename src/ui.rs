@@ -229,7 +229,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
 fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_stateful_widget(
-        Scrollbar::default()
+        Scrollbar::default().style(Style::new().green())
             .orientation(ScrollbarOrientation::VerticalRight)
             .begin_symbol(None)
             .end_symbol(None),
