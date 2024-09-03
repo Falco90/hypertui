@@ -13,6 +13,12 @@ use ratatui::{
 use crate::app::{App, CurrentScreen};
 
 pub fn render_ui(frame: &mut Frame, app: &mut App) {
+    let centered_rect = centered_rect(95, 95, frame.area());
+    let main_block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::new().green());
+    frame.render_widget(main_block, centered_rect);
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -20,10 +26,10 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
             Constraint::Min(1),
             Constraint::Length(3),
         ])
-        .split(frame.area());
+        .split(centered_rect);
 
     match app.current_screen {
-        CurrentScreen::Startup => render_startup_screen(frame, app, frame.area()),
+        CurrentScreen::Startup => render_startup_screen(frame, app, centered_rect),
         CurrentScreen::Main => {
             render_title(frame, app, chunks[0]);
             render_main_screen(frame, app, chunks[1]);
@@ -45,7 +51,7 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
 fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(1)])
+        .constraints([Constraint::Length(2), Constraint::Min(1)])
         .split(area);
 
     render_tabs(frame, app, chunks[0]);
@@ -59,15 +65,17 @@ fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
-    let title_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
+    let title_block = Block::default().style(Style::default());
+    let mut content = "";
 
-    let title = Paragraph::new(Text::styled(
-        "Hypertui Dashboard",
-        Style::default().fg(Color::Green),
-    ))
-    .block(title_block);
+    match app.current_screen {
+        CurrentScreen::QueryBuilder => content = "\n:: Query Builder ::",
+        CurrentScreen::Main => content = "\n:: Query Results ::",
+        _ => {}
+    }
+
+    let title =
+        Paragraph::new(Text::styled(content, Style::default().fg(Color::Green))).block(title_block).alignment(Alignment::Center);
 
     frame.render_widget(title, area);
 }
@@ -87,14 +95,14 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let centered_rect = centered_rect(90, 90, area);
-
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(20), Constraint::Percentage(40), Constraint::Percentage(40)])
-        .split(centered_rect);
-
-    let main_block = Block::default().borders(Borders::ALL).border_style(Style::new().green()); 
+        .constraints([
+            Constraint::Percentage(20),
+            Constraint::Percentage(40),
+            Constraint::Percentage(40),
+        ])
+        .split(area);
 
     let title_block = Block::default()
         .borders(Borders::NONE)
@@ -109,16 +117,18 @@ fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 ................................................................",
         Style::default().fg(Color::Green),
     ))
-    .block(title_block).alignment(Alignment::Center);
+    .block(title_block)
+    .alignment(Alignment::Center);
 
     let instructions_block = Block::default().style(Style::default());
 
     let instructions = Paragraph::new(Text::styled(
         "Press 'c' to start a new query\n\nPress 'q' to quit",
         Style::default().fg(Color::Yellow),
-    )).block(instructions_block).alignment(Alignment::Center);
+    ))
+    .block(instructions_block)
+    .alignment(Alignment::Center);
 
-    frame.render_widget(main_block, centered_rect);
     frame.render_widget(title, chunks[1]);
     frame.render_widget(instructions, chunks[2]);
 }
@@ -147,9 +157,9 @@ fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
         .transaction_tabs
         .titles
         .iter()
-        .map(|t| text::Line::from(Span::styled(*t, Style::default().fg(Color::Green))))
+        .map(|t| text::Line::from(Span::styled(*t, Style::default().fg(Color::Green))).bold())
         .collect::<Tabs>()
-        .block(Block::bordered())
+        .block(Block::default().padding(Padding::horizontal(2)))
         .highlight_style(Style::default().fg(Color::Yellow))
         .select(app.transaction_tabs.index);
 
@@ -159,7 +169,8 @@ fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(45), Constraint::Percentage(55)])
+        .horizontal_margin(2)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(area);
 
     let right_panel = Layout::default()
@@ -200,7 +211,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         ],
     )
     .header(header)
-    .block(Block::bordered().padding(Padding::horizontal(2)))
+    .block(Block::bordered().border_style(Style::new().green()).padding(Padding::horizontal(2)))
     .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
     frame.render_stateful_widget(table, chunks[0], &mut app.table_state);
@@ -328,7 +339,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                 });
                 let table = Table::new(rows, [Constraint::Percentage(100)])
                     .header(header)
-                    .block(Block::bordered().padding(Padding::horizontal(2)));
+                    .block(Block::bordered().border_style(Style::new().green()).padding(Padding::horizontal(2)));
 
                 frame.render_widget(table, area);
             }

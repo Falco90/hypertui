@@ -123,9 +123,9 @@ impl<'a> App<'a> {
             current_screen: CurrentScreen::Startup,
             currently_editing: false,
             transaction_tabs: TabsState::new(vec![
-                "regular transfers",
-                "erc20 transfers",
-                "erc721 transfers",
+                "Regular Transfers",
+                "ERC20 Transfers",
+                "ERC721 Transfers",
             ]),
             query_tabs: TabsState::new(vec!["Address", "Chain", "Types"]),
             table_state: TableState::default().with_selected(0),
