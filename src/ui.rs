@@ -33,10 +33,12 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         CurrentScreen::Main => {
             render_title(frame, app, chunks[0]);
             render_main_screen(frame, app, chunks[1]);
+            render_footer(frame, app, chunks[2]);
         }
         CurrentScreen::QueryBuilder => {
             render_title(frame, app, chunks[0]);
             render_query_screen(frame, app, chunks[1]);
+            render_footer(frame, app, chunks[2]);
         }
         CurrentScreen::Exiting => {
             render_title(frame, app, chunks[0]);
@@ -74,8 +76,9 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
         _ => {}
     }
 
-    let title =
-        Paragraph::new(Text::styled(content, Style::default().fg(Color::Green))).block(title_block).alignment(Alignment::Center);
+    let title = Paragraph::new(Text::styled(content, Style::default().fg(Color::Green)))
+        .block(title_block)
+        .alignment(Alignment::Center);
 
     frame.render_widget(title, area);
 }
@@ -211,7 +214,11 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         ],
     )
     .header(header)
-    .block(Block::bordered().border_style(Style::new().green()).padding(Padding::horizontal(2)))
+    .block(
+        Block::bordered()
+            .border_style(Style::new().green())
+            .padding(Padding::horizontal(2)),
+    )
     .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
     frame.render_stateful_widget(table, chunks[0], &mut app.table_state);
@@ -339,7 +346,11 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                 });
                 let table = Table::new(rows, [Constraint::Percentage(100)])
                     .header(header)
-                    .block(Block::bordered().border_style(Style::new().green()).padding(Padding::horizontal(2)));
+                    .block(
+                        Block::bordered()
+                            .border_style(Style::new().green())
+                            .padding(Padding::horizontal(2)),
+                    );
 
                 frame.render_widget(table, area);
             }
@@ -350,7 +361,26 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
     }
 }
 
-fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {}
+fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
+    let instructions_block = Block::default().padding(Padding::vertical(1));
+    let mut content = "";
+
+    match app.current_screen {
+        CurrentScreen::Main => {
+            content = "Up: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Quit: 'q'"
+        }
+        CurrentScreen::QueryBuilder => {
+            content = "Edit Mode: 'e' | Up: \u{21D1} | Down: \u{21D3} | Confirm: ENTER"
+        }
+        _ => {}
+    }
+
+    let instructions = Paragraph::new(Text::styled(content, Style::default().fg(Color::Green)))
+        .block(instructions_block)
+        .alignment(Alignment::Center);
+
+    frame.render_widget(instructions, area);
+}
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
