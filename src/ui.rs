@@ -1,6 +1,7 @@
+use ethers::core::utils::format_ether;
 use ratatui::{
-    layout::{Constraint, Direction, Layout, Margin, Rect},
-    style::{Color, Style},
+    layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
+    style::{Color, Style, Stylize},
     text::{self, Line, Span, Text},
     widgets::{
         Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
@@ -8,7 +9,6 @@ use ratatui::{
     },
     Frame,
 };
-use ethers::core::utils::format_ether;
 
 use crate::app::{App, CurrentScreen};
 
@@ -22,18 +22,23 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         ])
         .split(frame.area());
 
-    render_title(frame, app, chunks[0]);
-
     match app.current_screen {
-        CurrentScreen::Startup => render_startup_screen(frame, app, chunks[1]),
+        CurrentScreen::Startup => render_startup_screen(frame, app, frame.area()),
         CurrentScreen::Main => {
+            render_title(frame, app, chunks[0]);
             render_main_screen(frame, app, chunks[1]);
         }
         CurrentScreen::QueryBuilder => {
+            render_title(frame, app, chunks[0]);
             render_query_screen(frame, app, chunks[1]);
         }
-        CurrentScreen::Exiting => {}
-        CurrentScreen::Loading => render_loading_screen(frame, app, chunks[1]),
+        CurrentScreen::Exiting => {
+            render_title(frame, app, chunks[0]);
+        }
+        CurrentScreen::Loading => {
+            render_title(frame, app, chunks[0]);
+            render_loading_screen(frame, app, chunks[1]);
+        }
     }
 }
 
@@ -82,17 +87,40 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+    let centered_rect = centered_rect(90, 90, area);
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(20), Constraint::Percentage(40), Constraint::Percentage(40)])
+        .split(centered_rect);
+
+    let main_block = Block::default().borders(Borders::ALL).border_style(Style::new().green()); 
+
     let title_block = Block::default()
-        .borders(Borders::ALL)
+        .borders(Borders::NONE)
         .style(Style::default());
 
     let title = Paragraph::new(Text::styled(
-        "Startup screen",
+        ".##..##..##..##..#####...######..#####...######..##..##..######.
+.##..##...####...##..##..##......##..##....##....##..##....##...
+.######....##....#####...####....#####.....##....##..##....##...
+.##..##....##....##......##......##..##....##....##..##....##...
+.##..##....##....##......######..##..##....##.....####...######.
+................................................................",
         Style::default().fg(Color::Green),
     ))
-    .block(title_block);
+    .block(title_block).alignment(Alignment::Center);
 
-    frame.render_widget(title, area);
+    let instructions_block = Block::default().style(Style::default());
+
+    let instructions = Paragraph::new(Text::styled(
+        "Press 'c' to start a new query\n\nPress 'q' to quit",
+        Style::default().fg(Color::Yellow),
+    )).block(instructions_block).alignment(Alignment::Center);
+
+    frame.render_widget(main_block, centered_rect);
+    frame.render_widget(title, chunks[1]);
+    frame.render_widget(instructions, chunks[2]);
 }
 
 fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -149,7 +177,12 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .style(header_style)
         .height(2);
     let rows = app.regular_transfers.iter().enumerate().map(|(i, data)| {
-        let item = [&data.hash, &data.from, &data.to, &format_ether(data.value)[..5]];
+        let item = [
+            &data.hash,
+            &data.from,
+            &data.to,
+            &format_ether(data.value)[..5],
+        ];
         item.into_iter()
             .map(|content| Cell::from(Text::from(format!("{content}"))))
             .collect::<Row>()
@@ -280,7 +313,10 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     ("Block:  ", selected_transaction.block.as_str()),
                     ("From:   ", selected_transaction.from.as_str()),
                     ("To:     ", selected_transaction.to.as_str()),
-                    ("Value:   \u{27E0}", &format_ether(selected_transaction.value)[..5]),
+                    (
+                        "Value:   \u{27E0}",
+                        &format_ether(selected_transaction.value)[..5],
+                    ),
                 ];
                 let rows = fields.iter().enumerate().map(|(i, data)| {
                     let item = [format!("{} {}", data.0, data.1)];
