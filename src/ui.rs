@@ -280,7 +280,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     ("Block:  ", selected_transaction.block.as_str()),
                     ("From:   ", selected_transaction.from.as_str()),
                     ("To:     ", selected_transaction.to.as_str()),
-                    ("Value:  ", &format_ether(selected_transaction.value)[..5]),
+                    ("Value:   \u{27E0}", &format_ether(selected_transaction.value)[..5]),
                 ];
                 let rows = fields.iter().enumerate().map(|(i, data)| {
                     let item = [format!("{} {}", data.0, data.1)];
