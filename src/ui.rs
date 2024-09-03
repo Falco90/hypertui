@@ -24,7 +24,7 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         .constraints([
             Constraint::Length(3),
             Constraint::Min(1),
-            Constraint::Length(3),
+            Constraint::Length(4),
         ])
         .split(centered_rect);
 
@@ -162,7 +162,7 @@ fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .map(|t| text::Line::from(Span::styled(*t, Style::default().fg(Color::Green))).bold())
         .collect::<Tabs>()
-        .block(Block::default().padding(Padding::horizontal(2)))
+        .block(Block::default().style(Style::new().green()).padding(Padding::horizontal(2)))
         .highlight_style(Style::default().fg(Color::Yellow))
         .select(app.transaction_tabs.index);
 
@@ -367,10 +367,10 @@ fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.current_screen {
         CurrentScreen::Main => {
-            content = "Up: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Quit: 'q'"
+            content = "\nUp: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Quit: 'q'"
         }
         CurrentScreen::QueryBuilder => {
-            content = "Edit Mode: 'e' | Up: \u{21D1} | Down: \u{21D3} | Confirm: ENTER"
+            content = "\nEdit Mode: 'e' | Up: \u{21D1} | Down: \u{21D3} | Confirm: ENTER"
         }
         _ => {}
     }
