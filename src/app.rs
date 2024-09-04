@@ -1,5 +1,6 @@
 use ratatui::widgets::{ListState, ScrollbarState, TableState};
 use ethers::core::types::U256;
+use serde::Serialize;
 
 const LINE_HEIGHT: usize = 1;
 
@@ -107,8 +108,10 @@ pub struct App<'a> {
     pub regular_transfers: Vec<RegularTransfer>,
     pub erc20_transfers: Vec<Erc20Transfer>,
     pub erc721_transfers: Vec<Erc721Transfer>,
+    pub save_json: bool
 }
 
+#[derive(Serialize)]
 pub struct RegularTransfer {
     pub hash: String,
     pub block: String,
@@ -135,6 +138,7 @@ impl<'a> App<'a> {
             regular_transfers: Vec::new(),
             erc20_transfers: Vec::new(),
             erc721_transfers: Vec::new(),
+            save_json: true
         }
     }
 

@@ -2,11 +2,6 @@ mod app;
 mod hypersync;
 mod ui;
 
-use std::{
-    error::Error,
-    io::{self, Stdout},
-};
-
 use app::{App, CurrentScreen};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
@@ -14,6 +9,12 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::prelude::{CrosstermBackend, Terminal};
+use serde_json;
+use std::fs::File;
+use std::{
+    error::Error,
+    io::{self, BufWriter, Stdout, Write},
+};
 use ui::render_ui;
 
 #[tokio::main]
@@ -36,6 +37,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
+
+    if app.save_json {
+        write_to_json(&app)?;
+    }
 
     Ok(())
 }
@@ -158,4 +163,12 @@ async fn run_app<'a>(
             }
         }
     }
+}
+
+fn write_to_json(app: &App) -> io::Result<()> {
+    let file = File::create("output.json")?;
+    let mut writer = BufWriter::new(file);
+    serde_json::to_writer(&mut writer, &app.regular_transfers)?;
+    writer.flush()?;
+    Ok(())
 }

@@ -2256,7 +2256,7 @@ dependencies = [
  "ethers",
  "hypersync-client",
  "ratatui",
- "ruint",
+ "serde",
  "serde_json",
  "tokio",
 ]
