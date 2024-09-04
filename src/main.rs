@@ -37,11 +37,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
         DisableMouseCapture
     )?;
     terminal.show_cursor()?;
-
-    if app.save_json {
-        write_to_json(&app)?;
-    }
-
     Ok(())
 }
 
@@ -78,6 +73,9 @@ async fn run_app<'a>(
                     }
                     KeyCode::Char('q') => {
                         app.current_screen = CurrentScreen::Exiting;
+                    }
+                    KeyCode::Char('p') => {
+                        write_to_json(&app)?;
                     }
                     KeyCode::Tab => {
                         app.transaction_tabs.next();
@@ -168,7 +166,7 @@ async fn run_app<'a>(
 fn write_to_json(app: &App) -> io::Result<()> {
     let file = File::create("output.json")?;
     let mut writer = BufWriter::new(file);
-    serde_json::to_writer(&mut writer, &app.regular_transfers)?;
+    serde_json::to_writer(&mut writer, &app.transfers)?;
     writer.flush()?;
     Ok(())
 }

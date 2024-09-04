@@ -190,7 +190,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .collect::<Row>()
         .style(header_style)
         .height(2);
-    let rows = app.regular_transfers.iter().enumerate().map(|(i, data)| {
+    let rows = app.transfers.regular_transfers.iter().enumerate().map(|(i, data)| {
         let item = [
             &data.hash,
             &data.from,
@@ -250,7 +250,7 @@ fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .collect::<Row>()
         .style(header_style)
         .height(2);
-    let rows = app.erc20_transfers.iter().enumerate().map(|(i, data)| {
+    let rows = app.transfers.erc20_transfers.iter().enumerate().map(|(i, data)| {
         let item = [&data.hash, &data.from, &data.to, &data.amount];
         item.into_iter()
             .map(|content| Cell::from(Text::from(format!("{content}"))))
@@ -282,7 +282,7 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .collect::<Row>()
         .style(header_style)
         .height(2);
-    let rows = app.erc721_transfers.iter().enumerate().map(|(i, data)| {
+    let rows = app.transfers.erc721_transfers.iter().enumerate().map(|(i, data)| {
         let item = [
             &data.hash,
             &data.contract,
@@ -325,7 +325,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     .style(header_style)
                     .height(2);
 
-                let selected_transaction = &app.regular_transfers[index];
+                let selected_transaction = &app.transfers.regular_transfers[index];
                 let fields = [
                     ("Hash:   ", selected_transaction.hash.as_str()),
                     ("Block:  ", selected_transaction.block.as_str()),

@@ -93,7 +93,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                             match &decoded_log {
                                 Some(_) => {
                                     let decoded_log = decoded_log.unwrap();
-                                    app.erc20_transfers.push(Erc20Transfer {
+                                    app.transfers.erc20_transfers.push(Erc20Transfer {
                                         hash: log.transaction_hash.unwrap().encode_hex(),
                                         block: log.block_number.unwrap().to_string(),
                                         contract: log.address.unwrap().encode_hex(),
@@ -115,7 +115,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                                 None => {
                                     if let Ok(decoded_log) = erc721_decoder.decode_log(&log) {
                                         let decoded_log = decoded_log.unwrap();
-                                        app.erc721_transfers.push(Erc721Transfer {
+                                        app.transfers.erc721_transfers.push(Erc721Transfer {
                                             hash: log.transaction_hash.unwrap().encode_hex(),
                                             block: log.block_number.unwrap().to_string(),
                                             contract: log.address.unwrap().encode_hex(),
@@ -153,7 +153,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
                     value: format_ether(U256::from(tx.value.unwrap().as_ref()))
                 };
 
-                app.regular_transfers.push(regular_transfer);
+                app.transfers.regular_transfers.push(regular_transfer);
             }
         }
     }

@@ -49,6 +49,7 @@ impl<'b> QueryListState<'b> {
     }
 }
 
+#[derive(Serialize)]
 pub struct Erc20Transfer {
     pub hash: String,
     pub block: String,
@@ -58,6 +59,7 @@ pub struct Erc20Transfer {
     pub amount: String,
 }
 
+#[derive(Serialize)]
 pub struct Erc721Transfer {
     pub hash: String,
     pub block: String,
@@ -105,10 +107,7 @@ pub struct App<'a> {
     pub query_tabs: TabsState<'a>,
     pub query_state: ListState,
     pub scroll_state: ScrollbarState,
-    pub regular_transfers: Vec<RegularTransfer>,
-    pub erc20_transfers: Vec<Erc20Transfer>,
-    pub erc721_transfers: Vec<Erc721Transfer>,
-    pub save_json: bool
+    pub transfers: Transfers
 }
 
 #[derive(Serialize)]
@@ -118,6 +117,23 @@ pub struct RegularTransfer {
     pub to: String,
     pub from: String,
     pub value: String,
+}
+
+#[derive(Serialize)]
+pub struct Transfers {
+    pub regular_transfers: Vec<RegularTransfer>,
+    pub erc20_transfers: Vec<Erc20Transfer>,
+    pub erc721_transfers: Vec<Erc721Transfer>
+}
+
+impl Transfers {
+    fn new() -> Self {
+        Transfers {
+            regular_transfers: Vec::new(),
+            erc20_transfers: Vec::new(),
+            erc721_transfers: Vec::new()
+        }
+    }
 }
 
 impl<'a> App<'a> {
@@ -135,21 +151,18 @@ impl<'a> App<'a> {
             scroll_state: ScrollbarState::new(0),
             query: WalletQuery::new(),
             query_state: ListState::default().with_selected(Some(0)),
-            regular_transfers: Vec::new(),
-            erc20_transfers: Vec::new(),
-            erc721_transfers: Vec::new(),
-            save_json: true
+            transfers: Transfers::new()
         }
     }
 
     pub fn set_scroll_state(&mut self) {
-        self.scroll_state = ScrollbarState::new(&self.regular_transfers.len() - 1);
+        self.scroll_state = ScrollbarState::new(&self.transfers.regular_transfers.len() - 1);
     }
 
     pub fn next_table_row(&mut self) {
         let i = match self.table_state.selected() {
             Some(i) => {
-                if i >= self.regular_transfers.len() - 1 {
+                if i >= self.transfers.regular_transfers.len() - 1 {
                     0
                 } else {
                     i + 1
@@ -165,7 +178,7 @@ impl<'a> App<'a> {
         let i = match self.table_state.selected() {
             Some(i) => {
                 if i == 0 {
-                    self.regular_transfers.len() - 1 * LINE_HEIGHT
+                    self.transfers.regular_transfers.len() - 1 * LINE_HEIGHT
                 } else {
                     i - 1
                 }
