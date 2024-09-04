@@ -117,7 +117,7 @@ pub struct RegularTransfer {
     pub block: String,
     pub to: String,
     pub from: String,
-    pub value: U256,
+    pub value: String,
 }
 
 impl<'a> App<'a> {

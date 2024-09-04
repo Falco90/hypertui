@@ -195,7 +195,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             &data.hash,
             &data.from,
             &data.to,
-            &format_ether(data.value)[..5],
+            &data.value[..5],
         ];
         item.into_iter()
             .map(|content| Cell::from(Text::from(format!("{content}"))))
@@ -333,7 +333,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     ("To:     ", selected_transaction.to.as_str()),
                     (
                         "Value:   \u{27E0}",
-                        &format_ether(selected_transaction.value)[..5],
+                        &selected_transaction.value[..5],
                     ),
                 ];
                 let rows = fields.iter().enumerate().map(|(i, data)| {
