@@ -49,7 +49,7 @@ async fn run_app<'a>(
 
         if let CurrentScreen::Loading = &app.current_screen {
             hypersync::query(app).await;
-            app.set_scroll_state();
+            app.set_regular_scrollbar_state();
             app.current_screen = CurrentScreen::Main;
         }
 
@@ -84,7 +84,7 @@ async fn run_app<'a>(
                         app.previous_table_row();
                     }
                     KeyCode::Down => {
-                        app.next_table_row();
+                        app.next_regular_table_row();
                     }
                     _ => {}
                 },
@@ -99,7 +99,6 @@ async fn run_app<'a>(
                                     app.current_screen = CurrentScreen::Startup;
                                 }
                             }
-
                             KeyCode::Char('e') => {
                                 app.currently_editing = true;
                             }
@@ -107,7 +106,7 @@ async fn run_app<'a>(
                         }
                     } else {
                         match key.code {
-                            KeyCode::Enter => {
+                            KeyCode::Esc => {
                                 app.currently_editing = false;
                             }
                             KeyCode::Up => {
@@ -120,7 +119,6 @@ async fn run_app<'a>(
                                 if app.currently_editing {
                                     match app.query_state.selected().unwrap() {
                                         0 => app.query.address.push(value),
-                                        1 => app.query.chain.push(value),
                                         _ => {}
                                     }
                                 }
@@ -131,13 +129,25 @@ async fn run_app<'a>(
                                         0 => {
                                             app.query.address.pop();
                                         }
-                                        1 => {
-                                            app.query.chain.pop();
-                                        }
                                         _ => {}
                                     };
                                 }
                             }
+                            KeyCode::Enter => match app.query_state.selected().unwrap() {
+                                0 => {
+                                    app.query_state.select(Some(1));
+                                }
+                                1 => {
+                                    app.query.regular_transfers = !app.query.regular_transfers;
+                                }
+                                2 => {
+                                    app.query.erc20_transfers = !app.query.erc20_transfers;
+                                }
+                                3 => {
+                                    app.query.erc721_transfers = !app.query.erc721_transfers;
+                                }
+                                _ => {}
+                            },
                             _ => {}
                         }
                     }

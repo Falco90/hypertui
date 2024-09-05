@@ -4,9 +4,14 @@ use serde::Serialize;
 
 const LINE_HEIGHT: usize = 1;
 
+pub enum Chain {
+    Mainnet,
+    Optimism,
+    Arbitrum
+}
 pub struct WalletQuery {
     pub address: String,
-    pub chain: String,
+    pub chain: Chain,
     pub regular_transfers: bool,
     pub erc20_transfers: bool,
     pub erc721_transfers: bool,
@@ -17,7 +22,7 @@ impl WalletQuery {
     fn new() -> Self {
         WalletQuery {
             address: String::new(),
-            chain: String::new(),
+            chain: Chain::Mainnet,
             regular_transfers: true,
             erc20_transfers: true,
             erc721_transfers: false,
@@ -103,10 +108,10 @@ pub struct App<'a> {
     pub currently_editing: bool,
     pub query: WalletQuery,
     pub transaction_tabs: TabsState<'a>,
-    pub table_state: TableState,
+    pub table_states: TableStates,
     pub query_tabs: TabsState<'a>,
     pub query_state: ListState,
-    pub scroll_state: ScrollbarState,
+    pub scrollbar_states: ScrollbarStates,
     pub transfers: Transfers
 }
 
@@ -136,6 +141,38 @@ impl Transfers {
     }
 }
 
+pub struct TableStates {
+    pub regular_table: TableState,
+    pub erc20_table: TableState,
+    pub erc721_table: TableState
+}
+
+impl TableStates {
+    fn new() -> Self {
+        TableStates {
+            regular_table: TableState::default().with_selected(0),
+            erc20_table: TableState::default().with_selected(0),
+            erc721_table: TableState::default().with_selected(0)
+        }
+    }
+}
+
+pub struct ScrollbarStates {
+    pub regular_scrollbar: ScrollbarState,
+    pub erc20_scrollbar: ScrollbarState,
+    pub erc721_scrollbar: ScrollbarState
+}
+
+impl ScrollbarStates {
+    fn new() -> Self {
+        ScrollbarStates {
+            regular_scrollbar: ScrollbarState::new(0),
+            erc20_scrollbar: ScrollbarState::new(0),
+            erc721_scrollbar: ScrollbarState::new(0)
+        }
+    }
+}
+
 impl<'a> App<'a> {
     pub fn new() -> Self {
         App {
@@ -147,20 +184,20 @@ impl<'a> App<'a> {
                 "ERC721 Transfers",
             ]),
             query_tabs: TabsState::new(vec!["Address", "Chain", "Types"]),
-            table_state: TableState::default().with_selected(0),
-            scroll_state: ScrollbarState::new(0),
+            table_states: TableStates::new(),
+            scrollbar_states: ScrollbarStates::new(),
             query: WalletQuery::new(),
             query_state: ListState::default().with_selected(Some(0)),
             transfers: Transfers::new()
         }
     }
 
-    pub fn set_scroll_state(&mut self) {
-        self.scroll_state = ScrollbarState::new(&self.transfers.regular_transfers.len() - 1);
+    pub fn set_regular_scrollbar_state(&mut self) {
+        self.scrollbar_states.regular_scrollbar = ScrollbarState::new(&self.transfers.regular_transfers.len() - 1);
     }
 
-    pub fn next_table_row(&mut self) {
-        let i = match self.table_state.selected() {
+    pub fn next_regular_table_row(&mut self) {
+        let i = match self.table_states.regular_table.selected() {
             Some(i) => {
                 if i >= self.transfers.regular_transfers.len() - 1 {
                     0
@@ -170,12 +207,12 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
-        self.table_state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i * LINE_HEIGHT);
+        self.table_states.regular_table.select(Some(i));
+        self.scrollbar_states.regular_scrollbar = self.scrollbar_states.regular_scrollbar.position(i * LINE_HEIGHT);
     }
 
     pub fn previous_table_row(&mut self) {
-        let i = match self.table_state.selected() {
+        let i = match self.table_states.regular_table.selected() {
             Some(i) => {
                 if i == 0 {
                     self.transfers.regular_transfers.len() - 1 * LINE_HEIGHT
@@ -185,7 +222,7 @@ impl<'a> App<'a> {
             }
             None => 0,
         };
-        self.table_state.select(Some(i));
-        self.scroll_state = self.scroll_state.position(i * LINE_HEIGHT);
+        self.table_states.regular_table.select(Some(i));
+        self.scrollbar_states.regular_scrollbar = self.scrollbar_states.regular_scrollbar.position(i * LINE_HEIGHT);
     }
 }

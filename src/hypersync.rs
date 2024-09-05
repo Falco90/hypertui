@@ -6,14 +6,20 @@ use hypersync_client::{
 use ethers::{core::types::U256, utils::format_ether};
 use serde_json::Value;
 
-use crate::app::{App, Erc20Transfer, Erc721Transfer, RegularTransfer};
+use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer};
 fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
 
 pub async fn query<'a>(app: &mut App<'a>) {
+    let mut url = "";
+    match app.query.chain {
+        Chain::Optimism => { url = "https://optimism.hypersync.xyz"}
+        Chain::Arbitrum => { url = "https://arbitrum.hypersync.xyz"}
+        Chain::Mainnet => { url = "https://eth.hypersync.xyz"}
+    } 
     let client = Client::new(ClientConfig {
-        url: Some("https://eth.hypersync.xyz".parse().unwrap()),
+        url: Some(url.parse().unwrap()),
         ..Default::default()
     })
     .unwrap();
