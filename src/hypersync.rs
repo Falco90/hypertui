@@ -12,12 +12,12 @@ fn address_to_topic(address: &str) -> String {
 }
 
 pub async fn query<'a>(app: &mut App<'a>) {
-    let mut url = "";
-    match app.query.chain {
-        Chain::Optimism => { url = "https://optimism.hypersync.xyz"}
-        Chain::Arbitrum => { url = "https://arbitrum.hypersync.xyz"}
-        Chain::Mainnet => { url = "https://eth.hypersync.xyz"}
-    } 
+    let mut url = String::new();
+    match &app.query.chain {
+        Chain::Mainnet(link) => {url = link.clone();}
+        Chain::Optimism(link) => {url = link.clone();}
+        Chain::Arbitrum(link) => {url = link.clone();}
+    }
     let client = Client::new(ClientConfig {
         url: Some(url.parse().unwrap()),
         ..Default::default()

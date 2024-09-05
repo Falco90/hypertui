@@ -5,9 +5,9 @@ use serde::Serialize;
 const LINE_HEIGHT: usize = 1;
 
 pub enum Chain {
-    Mainnet,
-    Optimism,
-    Arbitrum
+    Mainnet(String),
+    Optimism(String),
+    Arbitrum(String)
 }
 pub struct WalletQuery {
     pub address: String,
@@ -22,7 +22,7 @@ impl WalletQuery {
     fn new() -> Self {
         WalletQuery {
             address: String::new(),
-            chain: Chain::Mainnet,
+            chain: Chain::Mainnet("https://eth.hypersync.xyz".to_string()),
             regular_transfers: true,
             erc20_transfers: true,
             erc721_transfers: false,

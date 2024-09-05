@@ -318,9 +318,21 @@ fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
-    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+    let chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .horizontal_margin(2)
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+        .split(area);
 
-    let header = ["Hash", "Contract", "From", "To", "Token Id"]
+    let right_panel = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(chunks[1]);
+
+    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+    let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
+
+    let header = ["Hash", "From", "To", "TokenId"]
         .into_iter()
         .map(Cell::from)
         .collect::<Row>()
@@ -332,13 +344,7 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .iter()
         .enumerate()
         .map(|(i, data)| {
-            let item = [
-                &data.hash,
-                &data.contract,
-                &data.from,
-                &data.to,
-                &data.token_id,
-            ];
+            let item = [&data.hash, &data.from, &data.to, &data.token_id];
             item.into_iter()
                 .map(|content| Cell::from(Text::from(format!("{content}"))))
                 .collect::<Row>()
@@ -349,16 +355,23 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         rows,
         [
             Constraint::Length(200),
-            Constraint::Length(200),
-            Constraint::Length(200),
-            Constraint::Length(200),
-            Constraint::Length(200),
+            Constraint::Length(40),
+            Constraint::Length(40),
+            Constraint::Length(40),
         ],
     )
     .header(header)
-    .block(Block::bordered())
+    .block(
+        Block::bordered()
+            .border_style(Style::new().green())
+            .padding(Padding::horizontal(2)),
+    )
+    .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
-    frame.render_widget(table, area);
+    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+
+    render_scrollbar(frame, app, chunks[0]);
+    render_tansaction_details(frame, app, right_panel[0]);
 }
 
 fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
