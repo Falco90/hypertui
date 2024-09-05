@@ -4,8 +4,8 @@ use ratatui::{
     style::{Color, Style, Stylize},
     text::{self, Line, Span, Text},
     widgets::{
-        Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding, Paragraph, Row, Scrollbar,
-        ScrollbarOrientation, Table, Tabs,
+        Bar, BarChart, BarGroup, Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding,
+        Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs,
     },
     Frame,
 };
@@ -164,7 +164,12 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let list = List::new(list_items)
         .highlight_symbol(">")
-        .highlight_spacing(HighlightSpacing::Always).block(Block::default().borders(Borders::ALL).padding(Padding::uniform(2)));
+        .highlight_spacing(HighlightSpacing::Always)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .padding(Padding::uniform(2)),
+        );
 
     frame.render_stateful_widget(list, pop_up, &mut app.query_state);
 }
@@ -198,6 +203,8 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(chunks[1]);
+
+    let bottom_right_panel = Layout::default().direction(Direction::Horizontal).constraints([Constraint::Percentage(60), Constraint::Percentage(40)]).split(right_panel[1]);
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
     let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
@@ -243,6 +250,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
     render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
+    render_bar_chart(frame, app, bottom_right_panel[0])
 }
 
 fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -418,6 +426,59 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
             _ => {}
         }
     }
+}
+
+fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
+    let mut highest_values: Vec<f64> = Vec::new();
+    let mut high_values: Vec<f64> = Vec::new();
+    let mut medium_values: Vec<f64> = Vec::new();
+    let mut low_values: Vec<f64> = Vec::new();
+    let mut lowest_values: Vec<f64> = Vec::new();
+
+
+    for transaction in &app.transfers.regular_transfers {
+        let parsed_value = transaction.value.as_str().parse::<f64>().unwrap();
+        if parsed_value >= 5.0 {
+            highest_values.push(parsed_value);
+        } else if parsed_value >= 1.0 {
+            high_values.push(parsed_value);
+        } else if parsed_value >= 0.5{
+            medium_values.push(parsed_value);
+        } else if parsed_value >= 0.1 {
+            low_values.push(parsed_value)
+        }  else {
+            lowest_values.push(parsed_value)
+        }
+    }
+
+    let bars: Vec<Bar> = vec![lowest_values.len(), low_values.len(), medium_values.len(), high_values.len(), highest_values.len()]
+        .iter()
+        .map(|v| *v)
+        .enumerate()
+        .map(|(i, value)| {
+            Bar::default()
+                .value(value.try_into().unwrap())
+                .label(Line::from(format!("{}", match i {
+                    0 => "<0.1",
+                    1 => "0.1-0.5",
+                    2 => "0.5-1",
+                    3 => "1-5",
+                    4 => ">5",
+                    _ => ""
+                })))
+                .text_value(format!("{value}"))
+                .style(Style::new().yellow())
+                .value_style(Style::new())
+        })
+        .collect();
+    let title = Line::from("Transaction Values").centered();
+
+    let bar_chart = BarChart::default()
+        .data(BarGroup::default().bars(&bars))
+        .block(Block::new().title(title).borders(Borders::ALL).padding(Padding::symmetric(1, 0)).style(Style::new().green()))
+        .bar_width(7);
+
+    frame.render_widget(bar_chart, area)
 }
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
