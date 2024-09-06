@@ -153,19 +153,32 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("Regular transfers:         {}", app.query.regular_transfers),
+            format!("Regular transfers:         {}", match app.query.regular_transfers {
+                true => "Yes",
+                false => "No"
+            }),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC20 transfers:           {}", app.query.erc20_transfers),
+            format!("ERC20 transfers:           {}", match app.query.erc20_transfers {
+                true => "Yes",
+                false => "No"
+            }),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC721 transfers:          {}", app.query.erc721_transfers),
+            format!("ERC721 transfers:          {}", match app.query.erc721_transfers {
+                true => "Yes",
+                false => "No"
+            }),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("Chain:                 "),
+            format!("Chain:                     {}", match app.query.chain {
+                Chain::Mainnet(_) => "Mainnet",
+                Chain::Optimism(_) => "Optimism",
+                Chain::Arbitrum(_) => "Arbitrum"
+            }),
             Style::default().fg(Color::Yellow),
         ))),
     ];
