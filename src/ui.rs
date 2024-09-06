@@ -153,32 +153,44 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("Regular transfers:         {}", match app.query.regular_transfers {
-                true => "Yes",
-                false => "No"
-            }),
+            format!(
+                "Regular transfers:         {}",
+                match app.query.regular_transfers {
+                    true => "Yes",
+                    false => "No",
+                }
+            ),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC20 transfers:           {}", match app.query.erc20_transfers {
-                true => "Yes",
-                false => "No"
-            }),
+            format!(
+                "ERC20 transfers:           {}",
+                match app.query.erc20_transfers {
+                    true => "Yes",
+                    false => "No",
+                }
+            ),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC721 transfers:          {}", match app.query.erc721_transfers {
-                true => "Yes",
-                false => "No"
-            }),
+            format!(
+                "ERC721 transfers:          {}",
+                match app.query.erc721_transfers {
+                    true => "Yes",
+                    false => "No",
+                }
+            ),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("Chain:                     {}", match app.query.chain {
-                Chain::Mainnet(_) => "Mainnet",
-                Chain::Optimism(_) => "Optimism",
-                Chain::Arbitrum(_) => "Arbitrum"
-            }),
+            format!(
+                "Chain:                     {}",
+                match app.query.chain {
+                    Chain::Mainnet(_) => "Mainnet",
+                    Chain::Optimism(_) => "Optimism",
+                    Chain::Arbitrum(_) => "Arbitrum",
+                }
+            ),
             Style::default().fg(Color::Yellow),
         ))),
     ];
@@ -248,7 +260,7 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .map(|(i, data)| {
             let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
             item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{content}"))))
+                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
                 .collect::<Row>()
                 .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
                 .height(1)
@@ -322,7 +334,7 @@ fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .map(|(i, data)| {
             let item = [&data.hash, &data.from, &data.to, &data.amount];
             item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{content}"))))
+                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
                 .collect::<Row>()
                 .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
                 .height(1)
@@ -379,7 +391,7 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .map(|(i, data)| {
             let item = [&data.hash, &data.from, &data.to, &data.token_id];
             item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{content}"))))
+                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
                 .collect::<Row>()
                 .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
                 .height(1)
@@ -561,4 +573,16 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn truncate(content: &str) -> String {
+    if content.len() >= 2 && content[..2] == *"0x" {
+        format!(
+            "{}...{}",
+            &content[..4],
+            &content[content.len() - 4..content.len()]
+        )
+    } else {
+        content.to_string()
+    }
 }
