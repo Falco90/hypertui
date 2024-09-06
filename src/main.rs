@@ -119,6 +119,7 @@ async fn run_app<'a>(
                                 if app.currently_editing {
                                     match app.query_state.selected().unwrap() {
                                         0 => app.query.address.push(value),
+                                        5 => app.query.start_block.push(value),
                                         _ => {}
                                     }
                                 }
@@ -128,6 +129,9 @@ async fn run_app<'a>(
                                     match app.query_state.selected().unwrap() {
                                         0 => {
                                             app.query.address.pop();
+                                        }
+                                        5 => {
+                                            app.query.start_block.pop();
                                         }
                                         _ => {}
                                     };

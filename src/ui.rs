@@ -89,14 +89,25 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let title_block = Block::default().style(Style::default().green());
 
     let text = Paragraph::new(Text::styled(
-        "\n\n\n\n>=>                                  >=>                                     
->=>                                  >=>  >>                                 
->=>          >=>        >=> >=>      >=>     >==>>==>     >=>                
->=>        >=>  >=>   >=>   >=>   >=>>=> >=>  >=>  >=>  >=>  >=>             
->=>       >=>    >=> >=>    >=>  >>  >=> >=>  >=>  >=> >=>   >=>             
->=>        >=>  >=>   >=>   >=>  >>  >=> >=>  >=>  >=>  >=>  >=>             
->=======>    >=>       >==>>>==>  >=>>=> >=> >==>  >=>      >=>  >=> >=> >=> 
-                                                         >=>  ",
+        format!("HyperSync is fetching {} {} {} \nfrom block {} on \n{}...", match app.query.regular_transfers {
+            true => "\nRegular Transfers",
+            false => ""
+        },
+        match app.query.erc20_transfers {
+            true => "\nERC20 Transfers",
+            false => ""
+        },
+        match app.query.erc721_transfers {
+            true => "\nERC721 Transfers",
+            false => ""
+        },
+        app.query.start_block,
+        match app.query.chain {
+            Chain::Mainnet(_) => "Mainnet",
+            Chain::Optimism(_) => "Mainnet",
+            Chain::Arbitrum(_) => "Mainnet"
+        }
+    ),
         Style::default().fg(Color::Yellow),
     ))
     .block(title_block)
@@ -193,6 +204,10 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             ),
             Style::default().fg(Color::Yellow),
         ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("From block:                {}", app.query.start_block),
+            Style::default().fg(Color::Yellow)
+        )))
     ];
 
     let list = List::new(list_items)

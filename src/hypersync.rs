@@ -35,7 +35,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
     let address_topic_filter: Vec<String> = addresses.iter().map(|a| address_to_topic(a)).collect();
 
     let query: Query = serde_json::from_value(serde_json::json!( {
-        "from_block": 0,
+        "from_block": app.query.start_block.parse::<u128>().unwrap(),
         "logs": [
             {
                 "topics":[

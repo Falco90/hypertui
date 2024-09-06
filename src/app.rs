@@ -1,5 +1,4 @@
 use ratatui::widgets::{ListState, ScrollbarState, TableState};
-use ethers::core::types::U256;
 use serde::Serialize;
 
 const LINE_HEIGHT: usize = 1;
@@ -15,7 +14,7 @@ pub struct WalletQuery {
     pub regular_transfers: bool,
     pub erc20_transfers: bool,
     pub erc721_transfers: bool,
-    pub index: usize,
+    pub start_block: String,
 }
 
 impl WalletQuery {
@@ -26,7 +25,7 @@ impl WalletQuery {
             regular_transfers: true,
             erc20_transfers: true,
             erc721_transfers: false,
-            index: 0,
+            start_block: String::from("1"),
         }
     }
 }
