@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use ethers::{core::types::U256, utils::format_ether};
 use hypersync_client::{
     format::Hex, net_types::Query, Client, ClientConfig, Decoder, StreamConfig,
 };
-use ethers::{core::types::U256, utils::format_ether};
 use serde_json::Value;
 
 use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer};
@@ -14,9 +14,15 @@ fn address_to_topic(address: &str) -> String {
 pub async fn query<'a>(app: &mut App<'a>) {
     let mut url = String::new();
     match &app.query.chain {
-        Chain::Mainnet(link) => {url = link.clone();}
-        Chain::Optimism(link) => {url = link.clone();}
-        Chain::Arbitrum(link) => {url = link.clone();}
+        Chain::Mainnet(link) => {
+            url = link.clone();
+        }
+        Chain::Optimism(link) => {
+            url = link.clone();
+        }
+        Chain::Arbitrum(link) => {
+            url = link.clone();
+        }
     }
     let client = Client::new(ClientConfig {
         url: Some(url.parse().unwrap()),
@@ -156,10 +162,12 @@ pub async fn query<'a>(app: &mut App<'a>) {
                     block: tx.block_number.unwrap().to_string(),
                     from: tx.from.unwrap().encode_hex(),
                     to: tx.to.unwrap().encode_hex(),
-                    value: format_ether(U256::from(tx.value.unwrap().as_ref()))
+                    value: format_ether(U256::from(tx.value.unwrap().as_ref())),
                 };
-
-                app.transfers.regular_transfers.push(regular_transfer);
+                let parsed_value = regular_transfer.value.as_str().parse::<f64>().unwrap();
+                if parsed_value > 0.0000 {
+                    app.transfers.regular_transfers.push(regular_transfer);
+                }
             }
         }
     }

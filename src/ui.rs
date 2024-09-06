@@ -72,6 +72,7 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.current_screen {
         CurrentScreen::QueryBuilder => content = "\n:: Query Builder ::",
+        CurrentScreen::Loading => content = "\n:: Processing Query ::",
         CurrentScreen::Main => content = "\n:: Query Results ::",
         _ => {}
     }
@@ -84,17 +85,24 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let title_block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default());
+    let pop_up = centered_rect(60, 60, area);
+    let title_block = Block::default().style(Style::default().green());
 
-    let title = Paragraph::new(Text::styled(
-        "Loading...",
-        Style::default().fg(Color::Green),
+    let text = Paragraph::new(Text::styled(
+        "\n\n\n\n>=>                                  >=>                                     
+>=>                                  >=>  >>                                 
+>=>          >=>        >=> >=>      >=>     >==>>==>     >=>                
+>=>        >=>  >=>   >=>   >=>   >=>>=> >=>  >=>  >=>  >=>  >=>             
+>=>       >=>    >=> >=>    >=>  >>  >=> >=>  >=>  >=> >=>   >=>             
+>=>        >=>  >=>   >=>   >=>  >>  >=> >=>  >=>  >=>  >=>  >=>             
+>=======>    >=>       >==>>>==>  >=>>=> >=> >==>  >=>      >=>  >=> >=> >=> 
+                                                         >=>  ",
+        Style::default().fg(Color::Yellow),
     ))
-    .block(title_block);
+    .block(title_block)
+    .alignment(Alignment::Center);
 
-    frame.render_widget(title, area);
+    frame.render_widget(text, pop_up);
 }
 
 fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -137,23 +145,23 @@ fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let pop_up = centered_rect(40, 60, area);
+    let pop_up = centered_rect(60, 60, area);
 
     let list_items = vec![
         ListItem::new(Line::from(Span::styled(
-            format!("Wallet Address:        {}", app.query.address),
+            format!("Wallet Address:            {}", app.query.address),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("Regular transfers:   {}", app.query.regular_transfers),
+            format!("Regular transfers:         {}", app.query.regular_transfers),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC20 transfers:     {}", app.query.erc20_transfers),
+            format!("ERC20 transfers:           {}", app.query.erc20_transfers),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("ERC721 transfers:    {}", app.query.erc721_transfers),
+            format!("ERC721 transfers:          {}", app.query.erc721_transfers),
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
@@ -163,10 +171,11 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     ];
 
     let list = List::new(list_items)
-        .highlight_symbol(">")
+        .highlight_symbol("> ")
         .highlight_spacing(HighlightSpacing::Always)
         .block(
             Block::default()
+                .green()
                 .borders(Borders::ALL)
                 .padding(Padding::uniform(2)),
         );
@@ -204,7 +213,10 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(chunks[1]);
 
-    let bottom_right_panel = Layout::default().direction(Direction::Horizontal).constraints([Constraint::Percentage(60), Constraint::Percentage(40)]).split(right_panel[1]);
+    let bottom_right_panel = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+        .split(right_panel[1]);
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
     let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
@@ -435,51 +447,67 @@ fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
     let mut low_values: Vec<f64> = Vec::new();
     let mut lowest_values: Vec<f64> = Vec::new();
 
-
     for transaction in &app.transfers.regular_transfers {
         let parsed_value = transaction.value.as_str().parse::<f64>().unwrap();
         if parsed_value >= 5.0 {
             highest_values.push(parsed_value);
         } else if parsed_value >= 1.0 {
             high_values.push(parsed_value);
-        } else if parsed_value >= 0.5{
+        } else if parsed_value >= 0.5 {
             medium_values.push(parsed_value);
         } else if parsed_value >= 0.1 {
             low_values.push(parsed_value)
-        }  else {
+        } else {
             lowest_values.push(parsed_value)
         }
     }
 
-    let bars: Vec<Bar> = vec![lowest_values.len(), low_values.len(), medium_values.len(), high_values.len(), highest_values.len()]
-        .iter()
-        .map(|v| *v)
-        .enumerate()
-        .map(|(i, value)| {
-            Bar::default()
-                .value(value.try_into().unwrap())
-                .label(Line::from(format!("{}", match i {
+    let bars: Vec<Bar> = vec![
+        lowest_values.len(),
+        low_values.len(),
+        medium_values.len(),
+        high_values.len(),
+        highest_values.len(),
+    ]
+    .iter()
+    .map(|v| *v)
+    .enumerate()
+    .map(|(i, value)| {
+        Bar::default()
+            .value(value.try_into().unwrap())
+            .label(Line::from(format!(
+                "{}",
+                match i {
                     0 => "<0.1",
                     1 => "0.1-0.5",
                     2 => "0.5-1",
                     3 => "1-5",
                     4 => ">5",
-                    _ => ""
-                })))
-                .text_value(format!("{value}"))
-                .style(Style::new().yellow())
-                .value_style(Style::new())
-        })
-        .collect();
+                    _ => "",
+                }
+            )))
+            .text_value(format!("{value}"))
+            .style(Style::new().yellow())
+            .value_style(Style::new())
+    })
+    .collect();
     let title = Line::from("Transaction Values").centered();
 
     let bar_chart = BarChart::default()
         .data(BarGroup::default().bars(&bars))
-        .block(Block::new().title(title).borders(Borders::ALL).padding(Padding::symmetric(1, 0)).style(Style::new().green()))
+        .block(
+            Block::new()
+                .title(title)
+                .borders(Borders::ALL)
+                .padding(Padding::symmetric(1, 0))
+                .style(Style::new().green()),
+        )
         .bar_width(7);
 
     frame.render_widget(bar_chart, area)
 }
+
+fn render_regular_statistics(frame: &mut Frame, app: &mut App, area: Rect) {}
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
     let instructions_block = Block::default().padding(Padding::vertical(1));
