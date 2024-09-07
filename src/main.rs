@@ -49,7 +49,7 @@ async fn run_app<'a>(
 
         if let CurrentScreen::Loading = &app.current_screen {
             hypersync::query(app).await;
-            app.set_regular_scrollbar_state();
+            app.set_scrollbar_states();
             app.current_screen = CurrentScreen::Main;
         }
 

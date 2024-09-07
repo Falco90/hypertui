@@ -57,13 +57,7 @@ fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         .split(area);
 
     render_tabs(frame, app, chunks[0]);
-
-    match app.transaction_tabs.index {
-        0 => render_regular_tab(frame, app, chunks[1]),
-        1 => render_erc20_tab(frame, app, chunks[1]),
-        2 => render_erc721_tab(frame, app, chunks[1]),
-        _ => {}
-    }
+    render_transaction_tab(frame, app, chunks[1]);
 }
 
 fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -243,7 +237,7 @@ fn render_tabs(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(tabs, area);
 }
 
-fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
+fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
         .horizontal_margin(2)
@@ -263,44 +257,128 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
     let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
 
-    let header = ["Hash", "From", "To", "Value"]
-        .into_iter()
-        .map(Cell::from)
-        .collect::<Row>()
-        .style(header_style)
-        .height(2);
-    let rows = app
-        .transfers
-        .regular_transfers
-        .iter()
-        .enumerate()
-        .map(|(i, data)| {
-            let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
-            item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+    match app.transaction_tabs.titles[app.transaction_tabs.index] {
+        "Regular Transfers" => {
+            let header = ["Hash", "From", "To", "Value"]
+                .into_iter()
+                .map(Cell::from)
                 .collect::<Row>()
-                .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                .height(1)
-        });
+                .style(header_style)
+                .height(2);
+            let rows = app
+                .transfers
+                .regular_transfers
+                .iter()
+                .enumerate()
+                .map(|(i, data)| {
+                    let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
+                    item.into_iter()
+                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                        .collect::<Row>()
+                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                        .height(1)
+                });
 
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Length(200),
-            Constraint::Length(40),
-            Constraint::Length(40),
-            Constraint::Length(40),
-        ],
-    )
-    .header(header)
-    .block(
-        Block::bordered()
-            .border_style(Style::new().green())
-            .padding(Padding::horizontal(2)),
-    )
-    .highlight_style(selected_style)
-    .highlight_spacing(HighlightSpacing::Always);
-    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+            let table = Table::new(
+                rows,
+                [
+                    Constraint::Length(200),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                ],
+            )
+            .header(header)
+            .block(
+                Block::bordered()
+                    .border_style(Style::new().green())
+                    .padding(Padding::horizontal(2)),
+            )
+            .highlight_style(selected_style)
+            .highlight_spacing(HighlightSpacing::Always);
+
+            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+        }
+        "ERC20 Transfers" => {
+            let header = ["Hash", "From", "To", "Value"]
+                .into_iter()
+                .map(Cell::from)
+                .collect::<Row>()
+                .style(header_style)
+                .height(2);
+            let rows = app
+                .transfers
+                .erc20_transfers
+                .iter()
+                .enumerate()
+                .map(|(i, data)| {
+                    let item = [&data.hash, &data.from, &data.to, &data.amount];
+                    item.into_iter()
+                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                        .collect::<Row>()
+                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                        .height(1)
+                });
+            let table = Table::new(
+                rows,
+                [
+                    Constraint::Length(200),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                ],
+            )
+            .header(header)
+            .block(
+                Block::bordered()
+                    .border_style(Style::new().green())
+                    .padding(Padding::horizontal(2)),
+            )
+            .highlight_style(selected_style)
+            .highlight_spacing(HighlightSpacing::Always);
+            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
+        }
+        "ERC721 Transfers" => {
+            let header = ["Hash", "From", "To", "TokenId"]
+                .into_iter()
+                .map(Cell::from)
+                .collect::<Row>()
+                .style(header_style)
+                .height(2);
+            let rows = app
+                .transfers
+                .erc721_transfers
+                .iter()
+                .enumerate()
+                .map(|(i, data)| {
+                    let item = [&data.hash, &data.from, &data.to, &data.token_id];
+                    item.into_iter()
+                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                        .collect::<Row>()
+                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                        .height(1)
+                });
+            let table = Table::new(
+                rows,
+                [
+                    Constraint::Length(200),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                    Constraint::Length(40),
+                ],
+            )
+            .header(header)
+            .block(
+                Block::bordered()
+                    .border_style(Style::new().green())
+                    .padding(Padding::horizontal(2)),
+            )
+            .highlight_style(selected_style)
+            .highlight_spacing(HighlightSpacing::Always);
+            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
+        }
+        _ => {}
+    }
 
     render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
@@ -308,132 +386,51 @@ fn render_regular_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
-    frame.render_stateful_widget(
-        Scrollbar::default()
-            .style(Style::new().green())
-            .orientation(ScrollbarOrientation::VerticalRight)
-            .begin_symbol(None)
-            .end_symbol(None),
-        area.inner(Margin {
-            vertical: 3,
-            horizontal: 1,
-        }),
-        &mut app.scrollbar_states.regular_scrollbar,
-    );
-}
-
-fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .horizontal_margin(2)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
-        .split(area);
-
-    let right_panel = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(chunks[1]);
-
-    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
-    let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
-
-    let header = ["Hash", "From", "To", "Value"]
-        .into_iter()
-        .map(Cell::from)
-        .collect::<Row>()
-        .style(header_style)
-        .height(2);
-    let rows = app
-        .transfers
-        .erc20_transfers
-        .iter()
-        .enumerate()
-        .map(|(i, data)| {
-            let item = [&data.hash, &data.from, &data.to, &data.amount];
-            item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
-                .collect::<Row>()
-                .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                .height(1)
-        });
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Length(200),
-            Constraint::Length(40),
-            Constraint::Length(40),
-            Constraint::Length(40),
-        ],
-    )
-    .header(header)
-    .block(
-        Block::bordered()
-            .border_style(Style::new().green())
-            .padding(Padding::horizontal(2)),
-    )
-    .highlight_style(selected_style)
-    .highlight_spacing(HighlightSpacing::Always);
-    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
-
-    render_scrollbar(frame, app, chunks[0]);
-    render_tansaction_details(frame, app, right_panel[0]);
-}
-
-fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
-    let chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .horizontal_margin(2)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
-        .split(area);
-
-    let right_panel = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-        .split(chunks[1]);
-
-    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
-    let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
-
-    let header = ["Hash", "From", "To", "TokenId"]
-        .into_iter()
-        .map(Cell::from)
-        .collect::<Row>()
-        .style(header_style)
-        .height(2);
-    let rows = app
-        .transfers
-        .erc721_transfers
-        .iter()
-        .enumerate()
-        .map(|(i, data)| {
-            let item = [&data.hash, &data.from, &data.to, &data.token_id];
-            item.into_iter()
-                .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
-                .collect::<Row>()
-                .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                .height(1)
-        });
-    let table = Table::new(
-        rows,
-        [
-            Constraint::Length(200),
-            Constraint::Length(40),
-            Constraint::Length(40),
-            Constraint::Length(40),
-        ],
-    )
-    .header(header)
-    .block(
-        Block::bordered()
-            .border_style(Style::new().green())
-            .padding(Padding::horizontal(2)),
-    )
-    .highlight_style(selected_style)
-    .highlight_spacing(HighlightSpacing::Always);
-    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
-
-    render_scrollbar(frame, app, chunks[0]);
-    render_tansaction_details(frame, app, right_panel[0]);
+    match app.transaction_tabs.titles[app.transaction_tabs.index] {
+        "Regular Transfers" => {
+            frame.render_stateful_widget(
+                Scrollbar::default()
+                    .style(Style::new().green())
+                    .orientation(ScrollbarOrientation::VerticalRight)
+                    .begin_symbol(None)
+                    .end_symbol(None),
+                area.inner(Margin {
+                    vertical: 3,
+                    horizontal: 1,
+                }),
+                &mut app.scrollbar_states.regular_scrollbar,
+            );
+        }
+        "ERC20 Transfers" => {
+            frame.render_stateful_widget(
+                Scrollbar::default()
+                    .style(Style::new().green())
+                    .orientation(ScrollbarOrientation::VerticalRight)
+                    .begin_symbol(None)
+                    .end_symbol(None),
+                area.inner(Margin {
+                    vertical: 3,
+                    horizontal: 1,
+                }),
+                &mut app.scrollbar_states.erc20_scrollbar,
+            );
+        }
+        "ERC721 Transfers" => {
+            frame.render_stateful_widget(
+                Scrollbar::default()
+                    .style(Style::new().green())
+                    .orientation(ScrollbarOrientation::VerticalRight)
+                    .begin_symbol(None)
+                    .end_symbol(None),
+                area.inner(Margin {
+                    vertical: 3,
+                    horizontal: 1,
+                }),
+                &mut app.scrollbar_states.erc721_scrollbar,
+            );
+        }
+        _ => {}
+    }
 }
 
 fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
