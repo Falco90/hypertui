@@ -89,25 +89,27 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let title_block = Block::default().style(Style::default().green());
 
     let text = Paragraph::new(Text::styled(
-        format!("HyperSync is fetching {} {} {} \nfrom block {} on \n{}...", match app.query.regular_transfers {
-            true => "\nRegular Transfers",
-            false => ""
-        },
-        match app.query.erc20_transfers {
-            true => "\nERC20 Transfers",
-            false => ""
-        },
-        match app.query.erc721_transfers {
-            true => "\nERC721 Transfers",
-            false => ""
-        },
-        app.query.start_block,
-        match app.query.chain {
-            Chain::Mainnet(_) => "Mainnet",
-            Chain::Optimism(_) => "Mainnet",
-            Chain::Arbitrum(_) => "Mainnet"
-        }
-    ),
+        format!(
+            "HyperSync is fetching {} {} {} \nfrom block {} on \n{}...",
+            match app.query.regular_transfers {
+                true => "\nRegular Transfers",
+                false => "",
+            },
+            match app.query.erc20_transfers {
+                true => "\nERC20 Transfers",
+                false => "",
+            },
+            match app.query.erc721_transfers {
+                true => "\nERC721 Transfers",
+                false => "",
+            },
+            app.query.start_block,
+            match app.query.chain {
+                Chain::Mainnet(_) => "Mainnet",
+                Chain::Optimism(_) => "Mainnet",
+                Chain::Arbitrum(_) => "Mainnet",
+            }
+        ),
         Style::default().fg(Color::Yellow),
     ))
     .block(title_block)
@@ -206,8 +208,8 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         ))),
         ListItem::new(Line::from(Span::styled(
             format!("From block:                {}", app.query.start_block),
-            Style::default().fg(Color::Yellow)
-        )))
+            Style::default().fg(Color::Yellow),
+        ))),
     ];
 
     let list = List::new(list_items)
@@ -371,7 +373,7 @@ fn render_erc20_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     )
     .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
-    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
 
     render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
@@ -428,56 +430,81 @@ fn render_erc721_tab(frame: &mut Frame, app: &mut App, area: Rect) {
     )
     .highlight_style(selected_style)
     .highlight_spacing(HighlightSpacing::Always);
-    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+    frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
 
     render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
 }
 
 fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
-    if let Some(index) = app.table_states.regular_table.selected() {
-        match app.transaction_tabs.index {
-            0 => {
-                let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+    let mut fields: Vec<(&str, &str)> = Vec::new();
 
-                let header = ["Transaction Details"]
-                    .into_iter()
-                    .map(Cell::from)
-                    .collect::<Row>()
-                    .style(header_style)
-                    .height(2);
-
+    match app.transaction_tabs.index {
+        0 => {
+            if let Some(index) = app.table_states.regular_table.selected() {
                 let selected_transaction = &app.transfers.regular_transfers[index];
-                let fields = [
+                fields = vec![
                     ("Hash:   ", selected_transaction.hash.as_str()),
                     ("Block:  ", selected_transaction.block.as_str()),
                     ("From:   ", selected_transaction.from.as_str()),
                     ("To:     ", selected_transaction.to.as_str()),
                     ("Value:   \u{27E0}", &selected_transaction.value[..5]),
                 ];
-                let rows = fields.iter().enumerate().map(|(i, data)| {
-                    let item = [format!("{} {}", data.0, data.1)];
-                    item.into_iter()
-                        .map(|content| Cell::from(Text::from(content)))
-                        .collect::<Row>()
-                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                        .height(1)
-                });
-                let table = Table::new(rows, [Constraint::Percentage(100)])
-                    .header(header)
-                    .block(
-                        Block::bordered()
-                            .border_style(Style::new().green())
-                            .padding(Padding::horizontal(2)),
-                    );
-
-                frame.render_widget(table, area);
             }
-            1 => {}
-            2 => {}
-            _ => {}
         }
+        1 => {
+            if let Some(index) = app.table_states.erc20_table.selected() {
+                let selected_transaction = &app.transfers.erc20_transfers[index];
+                fields = vec![
+                    ("Hash:   ", selected_transaction.hash.as_str()),
+                    ("Block:  ", selected_transaction.block.as_str()),
+                    ("From:   ", selected_transaction.from.as_str()),
+                    ("To:     ", selected_transaction.to.as_str()),
+                    ("Amount:   \u{27E0}", &selected_transaction.amount[..5]),
+                ];
+            }
+        }
+        2 => {
+            if let Some(index) = app.table_states.erc721_table.selected() {
+                let selected_transaction = &app.transfers.erc721_transfers[index];
+                fields = vec![
+                    ("Hash:   ", selected_transaction.hash.as_str()),
+                    ("Block:  ", selected_transaction.block.as_str()),
+                    ("From:   ", selected_transaction.from.as_str()),
+                    ("To:     ", selected_transaction.to.as_str()),
+                    ("TokenId:   \u{27E0}", &selected_transaction.token_id),
+                ];
+            }
+        }
+        _ => {}
     }
+    let rows = fields.iter().enumerate().map(|(i, data)| {
+        let item = [format!("{} {}", data.0, data.1)];
+        item.into_iter()
+            .map(|content| Cell::from(Text::from(content)))
+            .collect::<Row>()
+            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+            .height(1)
+    });
+
+    let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
+
+    let header = ["Transaction Details"]
+        .into_iter()
+        .map(Cell::from)
+        .collect::<Row>()
+        .style(header_style)
+        .height(2);
+
+    let table = Table::new(rows, [Constraint::Percentage(100)])
+        .header(header)
+        .block(
+            Block::bordered()
+                .border_style(Style::new().green())
+                .padding(Padding::horizontal(2)),
+        );
+
+    frame.render_widget(table, area);
 }
 
 fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
