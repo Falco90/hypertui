@@ -298,6 +298,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .highlight_spacing(HighlightSpacing::Always);
 
             frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+            render_bar_chart(frame, app, bottom_right_panel[0]);
         }
         "ERC20 Transfers" => {
             let header = ["Hash", "From", "To", "Value"]
@@ -382,7 +383,6 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
     render_scrollbar(frame, app, chunks[0]);
     render_tansaction_details(frame, app, right_panel[0]);
-    render_bar_chart(frame, app, bottom_right_panel[0])
 }
 
 fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -441,11 +441,11 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
             if let Some(index) = app.table_states.regular_table.selected() {
                 let selected_transaction = &app.transfers.regular_transfers[index];
                 fields = vec![
-                    ("Hash:   ", selected_transaction.hash.as_str()),
-                    ("Block:  ", selected_transaction.block.as_str()),
-                    ("From:   ", selected_transaction.from.as_str()),
-                    ("To:     ", selected_transaction.to.as_str()),
-                    ("Value:   \u{27E0}", &selected_transaction.value[..5]),
+                    ("Hash:    ", selected_transaction.hash.as_str()),
+                    ("Block:   ", selected_transaction.block.as_str()),
+                    ("From:    ", selected_transaction.from.as_str()),
+                    ("To:      ", selected_transaction.to.as_str()),
+                    ("Value:    \u{27E0}", &selected_transaction.value[..5]),
                 ];
             }
         }
@@ -453,11 +453,11 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
             if let Some(index) = app.table_states.erc20_table.selected() {
                 let selected_transaction = &app.transfers.erc20_transfers[index];
                 fields = vec![
-                    ("Hash:   ", selected_transaction.hash.as_str()),
-                    ("Block:  ", selected_transaction.block.as_str()),
-                    ("From:   ", selected_transaction.from.as_str()),
-                    ("To:     ", selected_transaction.to.as_str()),
-                    ("Amount:   \u{27E0}", &selected_transaction.amount[..5]),
+                    ("Hash:    ", selected_transaction.hash.as_str()),
+                    ("Block:   ", selected_transaction.block.as_str()),
+                    ("From:    ", selected_transaction.from.as_str()),
+                    ("To:      ", selected_transaction.to.as_str()),
+                    ("Amount:  ", &selected_transaction.amount[..5]),
                 ];
             }
         }
@@ -465,11 +465,11 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
             if let Some(index) = app.table_states.erc721_table.selected() {
                 let selected_transaction = &app.transfers.erc721_transfers[index];
                 fields = vec![
-                    ("Hash:   ", selected_transaction.hash.as_str()),
-                    ("Block:  ", selected_transaction.block.as_str()),
-                    ("From:   ", selected_transaction.from.as_str()),
-                    ("To:     ", selected_transaction.to.as_str()),
-                    ("TokenId:   \u{27E0}", &selected_transaction.token_id),
+                    ("Hash:    ", selected_transaction.hash.as_str()),
+                    ("Block:   ", selected_transaction.block.as_str()),
+                    ("From:    ", selected_transaction.from.as_str()),
+                    ("To:      ", selected_transaction.to.as_str()),
+                    ("TokenId: ", &selected_transaction.token_id),
                 ];
             }
         }
