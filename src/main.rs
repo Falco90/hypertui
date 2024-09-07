@@ -2,7 +2,7 @@ mod app;
 mod hypersync;
 mod ui;
 
-use app::{App, CurrentScreen, Chain};
+use app::{App, Chain, CurrentScreen};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
@@ -10,7 +10,7 @@ use crossterm::{
 };
 use ratatui::prelude::{CrosstermBackend, Terminal};
 use serde_json;
-use std::{fs::File};
+use std::fs::File;
 use std::{
     error::Error,
     io::{self, BufWriter, Stdout, Write},
@@ -84,7 +84,7 @@ async fn run_app<'a>(
                         app.previous_table_row();
                     }
                     KeyCode::Down => {
-                        app.next_regular_table_row();
+                        app.next_table_row();
                     }
                     _ => {}
                 },
@@ -152,11 +152,17 @@ async fn run_app<'a>(
                                 }
                                 4 => {
                                     app.query.chain = match app.query.chain {
-                                        Chain::Mainnet(_) => Chain::Optimism("https://optimism.hypersync.xyz".to_string()),
-                                        Chain::Optimism(_) => Chain::Arbitrum("https://arbitrum.hypersync.xyz".to_string()),
-                                        Chain::Arbitrum(_) => Chain::Mainnet("https://eth.hypersync.xyz".to_string())
+                                        Chain::Mainnet(_) => Chain::Optimism(
+                                            "https://optimism.hypersync.xyz".to_string(),
+                                        ),
+                                        Chain::Optimism(_) => Chain::Arbitrum(
+                                            "https://arbitrum.hypersync.xyz".to_string(),
+                                        ),
+                                        Chain::Arbitrum(_) => {
+                                            Chain::Mainnet("https://eth.hypersync.xyz".to_string())
+                                        }
                                     };
-                                },
+                                }
                                 _ => {}
                             },
                             _ => {}
