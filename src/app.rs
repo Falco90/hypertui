@@ -132,10 +132,13 @@ pub struct App<'a> {
 #[derive(Serialize)]
 pub struct RegularTransfer {
     pub hash: String,
+    pub block_hash: String,
     pub block: String,
+    pub nonce: String,
     pub to: String,
     pub from: String,
     pub value: String,
+    pub gas_used: String,
 }
 
 #[derive(Serialize)]

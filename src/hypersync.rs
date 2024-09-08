@@ -61,6 +61,7 @@ pub async fn query<'a>(app: &mut App<'a>) {
         "field_selection": {
             "log": Value::Array(vec![
                 "transaction_hash".into(),
+                "block_hash".into(),
                 "block_number".into(),
                 "address".into(),
                 "data".into(),
@@ -71,10 +72,14 @@ pub async fn query<'a>(app: &mut App<'a>) {
             ]),
             "transaction": [
                 "hash",
+                "block_hash",
                 "block_number",
+                "nonce",
                 "from",
                 "to",
                 "value",
+                "gas_used"
+
             ]
         },
     }))
@@ -159,13 +164,18 @@ pub async fn query<'a>(app: &mut App<'a>) {
             for tx in batch {
                 let regular_transfer = RegularTransfer {
                     hash: tx.hash.unwrap().encode_hex(),
+                    block_hash: tx.block_hash.unwrap().encode_hex(),
                     block: tx.block_number.unwrap().to_string(),
+                    nonce: format_ether(U256::from(tx.nonce.unwrap().as_ref())),
                     from: tx.from.unwrap().encode_hex(),
                     to: tx.to.unwrap().encode_hex(),
                     value: format_ether(U256::from(tx.value.unwrap().as_ref())),
+                    gas_used: format_ether(U256::from(tx.gas_used.unwrap().as_ref())),
                 };
                 let parsed_value = regular_transfer.value.as_str().parse::<f64>().unwrap();
-                if parsed_value > 0.0000 {
+                if (regular_transfer.from.to_lowercase() == app.query.address.to_lowercase()
+                    || regular_transfer.to.to_lowercase() == app.query.address.to_lowercase()) && parsed_value > 0.0000
+                {
                     app.transfers.regular_transfers.push(regular_transfer);
                 }
             }

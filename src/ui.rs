@@ -251,7 +251,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
     let bottom_right_panel = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
         .split(right_panel[1]);
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
@@ -298,7 +298,8 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .highlight_spacing(HighlightSpacing::Always);
 
             frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
-            render_bar_chart(frame, app, bottom_right_panel[0]);
+            render_regular_statistics(frame, app, bottom_right_panel[0]);
+            render_bar_chart(frame, app, bottom_right_panel[1]);
         }
         "ERC20 Transfers" => {
             let header = ["Hash", "From", "To", "Value"]
@@ -571,7 +572,106 @@ fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(bar_chart, area)
 }
 
-fn render_regular_statistics(frame: &mut Frame, app: &mut App, area: Rect) {}
+fn render_regular_statistics(frame: &mut Frame, app: &mut App, area: Rect) {
+    let style = Style::new().yellow();
+    let mut total_sent: f64 = 0.0;
+    let mut num_sent: usize = 0;
+    let mut num_received: usize = 0;
+    let mut total_received: f64 = 0.0;
+    let mut highest_sent: f64 = 0.0;
+    let mut highest_received: f64 = 0.0;
+    let mut unique_to: Vec<&String> = Vec::new();
+    let mut unique_from: Vec<&String> = Vec::new();
+
+    for transfer in &app.transfers.regular_transfers {
+        let value = transfer.value.parse::<f64>().unwrap();
+
+        if transfer.from.to_lowercase() == app.query.address.to_lowercase() {
+            num_sent += 1;
+            total_sent += value;
+            if value > highest_sent {
+                highest_sent = value;
+            }
+        } else if transfer.to.to_lowercase() == app.query.address.to_lowercase() {
+            num_received += 1;
+            total_received += value;
+            if value > highest_received {
+                highest_received = value
+            }
+        }
+
+        if !unique_to.contains(&&transfer.to) {
+            unique_to.push(&transfer.to);
+        }
+        if !unique_from.contains(&&transfer.from) {
+            unique_from.push(&transfer.from);
+        }
+    }
+
+    let avg_sent = total_sent / num_sent.to_string().parse::<f64>().unwrap();
+    let avg_received = total_received / num_received.to_string().parse::<f64>().unwrap();
+
+    let list_items = [
+        ListItem::new(Line::from(Span::styled(
+            format!(
+                "Total Transfers:    {}",
+                app.transfers.regular_transfers.len()
+            ),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Outgoing:           {}", num_sent),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Incoming:           {}", num_received),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Total Sent:         {:.4}", total_sent),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Total Received:     {:.4}", total_received),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Average Sent:       {:.4}", avg_sent),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Average Received:   {:.4}", avg_received),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Highest Sent:       {:.4}", highest_sent),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Highest Received:   {:.4}", highest_received),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Unique Senders:     {}", unique_to.len()),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Unique Recipients:  {}", unique_from.len()),
+            style,
+        ))),
+    ];
+
+    let list = List::new(list_items).block(
+        Block::default()
+            .title("Metrics")
+            .title_alignment(Alignment::Center)
+            .green()
+            .borders(Borders::ALL)
+            .padding(Padding::symmetric(2, 1)),
+    );
+
+    frame.render_widget(list, area);
+}
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
     let instructions_block = Block::default().padding(Padding::vertical(1));
