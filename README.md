@@ -4,7 +4,7 @@ HyperTui is a tool that displays on-chain data and analytics in a terminal user 
 Hypertui is created during ETHOnline 2024.
 
 ## Installation
-This application is written in Rust, so make sure you have Rust installed on your system.
+HyperTui is written in Rust, so make sure you have Rust [installed](https://www.rust-lang.org/tools/install) on your system.
 In order to build the HyperSync rust-client you will also need to install the capnproto tool:
 
 Linux
