@@ -4,7 +4,7 @@ mod ui;
 
 use app::{App, Chain, CurrentScreen};
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -28,7 +28,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let mut app = App::new();
 
-    let res = run_app(&mut terminal, &mut app).await;
+    let _res =run_app(&mut terminal, &mut app).await;
 
     disable_raw_mode()?;
     execute!(
@@ -76,7 +76,7 @@ async fn run_app<'a>(
             if app.is_saving_json {
                 match key.code {
                     KeyCode::Char('y') => {
-                        write_to_json(app);
+                        write_to_json(app)?;
                         app.is_saving_json = false;
                     }
                     KeyCode::Char('n') => {
@@ -192,17 +192,7 @@ async fn run_app<'a>(
                         app.current_screen = CurrentScreen::Startup;
                     }
                     _ => {}
-                },
-                CurrentScreen::Exiting => match key.code {
-                    KeyCode::Char('y') => {
-                        return Ok(true);
-                    }
-                    KeyCode::Char('n') | KeyCode::Char('q') => {
-                        app.current_screen = CurrentScreen::Main;
-                    }
-                    _ => {}
-                },
-                _ => {}
+                }
             }
         }
     }

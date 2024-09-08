@@ -1,6 +1,3 @@
-use std::fmt::format;
-
-use ethers::core::utils::format_ether;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
     style::{Color, Style, Stylize},
@@ -31,7 +28,7 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
         .split(centered_rect);
 
     match app.current_screen {
-        CurrentScreen::Startup => render_startup_screen(frame, app, centered_rect),
+        CurrentScreen::Startup => render_startup_screen(frame, centered_rect),
         CurrentScreen::Main => {
             render_title(frame, app, chunks[0]);
             render_main_screen(frame, app, chunks[1]);
@@ -42,9 +39,6 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
             render_query_screen(frame, app, chunks[1]);
             render_footer(frame, app, chunks[2]);
         }
-        CurrentScreen::Exiting => {
-            render_exit_popup(frame, app, frame.area());
-        }
         CurrentScreen::Loading => {
             render_title(frame, app, chunks[0]);
             render_loading_screen(frame, app, chunks[1]);
@@ -52,11 +46,11 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
     }
 
     if app.is_exiting {
-        render_exit_popup(frame, app, centered_rect);
+        render_exit_popup(frame, centered_rect);
     }
 
     if app.is_saving_json {
-        render_json_popup(frame, app, centered_rect);
+        render_json_popup(frame, centered_rect);
     }
 }
 
@@ -163,7 +157,7 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(list, pop_up);
 }
 
-fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
+fn render_startup_screen(frame: &mut Frame, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -337,7 +331,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
                     .regular_transfers
                     .iter()
                     .enumerate()
-                    .map(|(i, data)| {
+                    .map(|(_i, data)| {
                         let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
                         item.into_iter()
                             .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
@@ -388,7 +382,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
                     .erc20_transfers
                     .iter()
                     .enumerate()
-                    .map(|(i, data)| {
+                    .map(|(_i, data)| {
                         let item = [&data.hash, &data.from, &data.to, &data.amount];
                         item.into_iter()
                             .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
@@ -437,7 +431,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
                     .erc721_transfers
                     .iter()
                     .enumerate()
-                    .map(|(i, data)| {
+                    .map(|(_i, data)| {
                         let item = [&data.hash, &data.from, &data.to, &data.token_id];
                         item.into_iter()
                             .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
@@ -571,7 +565,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
         }
         _ => {}
     }
-    let rows = fields.iter().enumerate().map(|(i, data)| {
+    let rows = fields.iter().enumerate().map(|(_i, data)| {
         let item = [format!("{} {}", data.0, data.1)];
         item.into_iter()
             .map(|content| Cell::from(Text::from(content)))
@@ -670,7 +664,6 @@ fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
 fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
     let mut unique_contracts: Vec<&String> = Vec::new();
     let mut interactions_per_contract: Vec<usize> = Vec::new();
-    let mut most_interacted: Option<(&String, usize)> = None;
 
     for transfer in &app.transfers.erc20_transfers {
         let contract = &transfer.contract;
@@ -729,7 +722,6 @@ fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
 fn render_erc721_chart(frame: &mut Frame, app: &App, area: Rect) {
     let mut unique_contracts: Vec<&String> = Vec::new();
     let mut interactions_per_contract: Vec<usize> = Vec::new();
-    let mut most_interacted: Option<(&String, usize)> = None;
 
     for transfer in &app.transfers.erc721_transfers {
         let contract = &transfer.contract;
@@ -1052,7 +1044,7 @@ fn render_erc721_metrics(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(list, area);
 }
 
-fn render_exit_popup(frame: &mut Frame, app: &mut App, area: Rect) {
+fn render_exit_popup(frame: &mut Frame, area: Rect) {
     let outer_rect = centered_rect(42, 32, area);
     let inner_rect = centered_rect(40, 30, area);
     frame.render_widget(Clear, outer_rect);
@@ -1096,7 +1088,7 @@ fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(instructions, area);
 }
 
-fn render_json_popup(frame: &mut Frame, app: &App, area: Rect) {
+fn render_json_popup(frame: &mut Frame, area: Rect) {
     let outer_rect = centered_rect(42, 32, area);
     let inner_rect = centered_rect(40, 30, area);
     frame.render_widget(Clear, outer_rect);

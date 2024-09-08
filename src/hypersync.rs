@@ -14,21 +14,17 @@ fn address_to_topic(address: &str) -> String {
 pub async fn query<'a>(app: &mut App<'a>) {
     // Remove data from previous query
     app.transfers = Transfers::new();
-    
-    let mut url = String::new();
-    match &app.query.chain {
-        Chain::Mainnet(link) => {
-            url = link.clone();
-        }
-        Chain::Optimism(link) => {
-            url = link.clone();
-        }
-        Chain::Arbitrum(link) => {
-            url = link.clone();
-        }
-    }
+
     let client = Client::new(ClientConfig {
-        url: Some(url.parse().unwrap()),
+        url: Some(
+            match &app.query.chain {
+                Chain::Mainnet(link) => link.clone(),
+                Chain::Optimism(link) => link.clone(),
+                Chain::Arbitrum(link) => link.clone(),
+            }
+            .parse()
+            .unwrap(),
+        ),
         ..Default::default()
     })
     .unwrap();
@@ -177,7 +173,8 @@ pub async fn query<'a>(app: &mut App<'a>) {
                 };
                 let parsed_value = regular_transfer.value.as_str().parse::<f64>().unwrap();
                 if (regular_transfer.from.to_lowercase() == app.query.address.to_lowercase()
-                    || regular_transfer.to.to_lowercase() == app.query.address.to_lowercase()) && parsed_value > 0.0000
+                    || regular_transfer.to.to_lowercase() == app.query.address.to_lowercase())
+                    && parsed_value > 0.0000
                 {
                     app.transfers.regular_transfers.push(regular_transfer);
                 }

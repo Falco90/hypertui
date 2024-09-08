@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use ratatui::widgets::{ListState, ScrollbarState, TableState};
 use serde::Serialize;
 
@@ -79,7 +77,6 @@ pub enum CurrentScreen {
     Startup,
     QueryBuilder,
     Main,
-    Exiting,
     Loading,
 }
 
@@ -127,7 +124,6 @@ pub struct App<'a> {
     pub query: WalletQuery,
     pub transaction_tabs: TabsState<'a>,
     pub table_states: TableStates,
-    pub query_tabs: TabsState<'a>,
     pub query_state: ListState,
     pub scrollbar_states: ScrollbarStates,
     pub transfers: Transfers,
@@ -206,7 +202,6 @@ impl<'a> App<'a> {
                 "ERC20 Transfers",
                 "ERC721 Transfers",
             ]),
-            query_tabs: TabsState::new(vec!["Address", "Chain", "Types"]),
             table_states: TableStates::new(),
             scrollbar_states: ScrollbarStates::new(),
             query: WalletQuery::new(),
