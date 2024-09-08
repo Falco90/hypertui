@@ -262,7 +262,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .split(right_panel[1]),
         TransactionTab::ERC721 => Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
             .split(right_panel[1]),
     };
 
@@ -392,6 +392,8 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .highlight_style(selected_style)
             .highlight_spacing(HighlightSpacing::Always);
             frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
+            render_erc721_metrics(frame, app, bottom_right_panel[0]);
+            render_erc721_chart(frame, app, bottom_right_panel[1]);
         }
         _ => {}
     }
@@ -470,6 +472,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                 fields = vec![
                     ("Hash:    ", selected_transaction.hash.as_str()),
                     ("Block:   ", selected_transaction.block.as_str()),
+                    ("Contract:", selected_transaction.contract.as_str()),
                     ("From:    ", selected_transaction.from.as_str()),
                     ("To:      ", selected_transaction.to.as_str()),
                     ("Amount:  ", &selected_transaction.amount[..5]),
@@ -482,6 +485,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                 fields = vec![
                     ("Hash:    ", selected_transaction.hash.as_str()),
                     ("Block:   ", selected_transaction.block.as_str()),
+                    ("Contract:", selected_transaction.contract.as_str()),
                     ("From:    ", selected_transaction.from.as_str()),
                     ("To:      ", selected_transaction.to.as_str()),
                     ("TokenId: ", &selected_transaction.token_id),
@@ -627,7 +631,7 @@ fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
                 .value_style(Style::new())
         })
         .collect();
-    let title = Line::from("Most interactions").centered();
+    let title = Line::from("Most Interactions").centered();
 
     let bar_chart = BarChart::default()
         .data(BarGroup::default().bars(&bars))
@@ -639,7 +643,66 @@ fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
                 .title(title)
                 .borders(Borders::ALL)
                 .style(Style::new().green())
-                .padding(Padding::uniform(1))
+                .padding(Padding::uniform(1)),
+        );
+
+    frame.render_widget(bar_chart, area)
+}
+
+fn render_erc721_chart(frame: &mut Frame, app: &App, area: Rect) {
+    let mut unique_contracts: Vec<&String> = Vec::new();
+    let mut interactions_per_contract: Vec<usize> = Vec::new();
+    let mut most_interacted: Option<(&String, usize)> = None;
+
+    for transfer in &app.transfers.erc721_transfers {
+        let contract = &transfer.contract;
+
+        if let Some(pos) = unique_contracts.iter().position(|&c| c == contract) {
+            interactions_per_contract[pos] += 1;
+        } else {
+            unique_contracts.push(contract);
+            interactions_per_contract.push(1);
+        }
+    }
+
+    let mut sorted_contracts = unique_contracts
+        .iter()
+        .zip(interactions_per_contract.iter())
+        .collect::<Vec<(&&String, &usize)>>();
+
+    sorted_contracts.sort_by(|a, b| b.1.cmp(&a.1));
+
+    let bars: Vec<Bar> = sorted_contracts[..12]
+        .iter()
+        .map(|v| *v)
+        .enumerate()
+        .map(|(i, value)| {
+            Bar::default()
+                .value(*value.1 as u64)
+                .label(Line::from(format!(
+                    "{}",
+                    match i {
+                        _ => truncate(value.0),
+                    }
+                )))
+                .text_value(format!("{}", value.1.to_string()))
+                .style(Style::new().yellow())
+                .value_style(Style::new())
+        })
+        .collect();
+    let title = Line::from("Most Interactions").centered();
+
+    let bar_chart = BarChart::default()
+        .data(BarGroup::default().bars(&bars))
+        .direction(Direction::Horizontal)
+        .bar_width(1)
+        .bar_gap(0)
+        .block(
+            Block::new()
+                .title(title)
+                .borders(Borders::ALL)
+                .style(Style::new().green())
+                .padding(Padding::uniform(1)),
         );
 
     frame.render_widget(bar_chart, area)
@@ -799,6 +862,92 @@ fn render_erc20_metrics(frame: &mut Frame, app: &App, area: Rect) {
         ))),
         ListItem::new(Line::from(Span::styled(
             format!("Incoming:                      {}", num_to),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Unique Contracts:              {}", unique_contracts.len()),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!(
+                "Avg Transfers Per Contract:    {}",
+                avg_interactions_per_contract
+            ),
+            style,
+        ))),
+    ];
+
+    let list = List::new(list_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .green()
+            .title("Metrics")
+            .title_alignment(Alignment::Center)
+            .padding(Padding::symmetric(2, 1)),
+    );
+
+    frame.render_widget(list, area);
+}
+fn render_erc721_metrics(frame: &mut Frame, app: &App, area: Rect) {
+    let mut unique_contracts: Vec<&String> = Vec::new();
+    let mut interactions_per_contract: Vec<usize> = Vec::new();
+    let mut num_from: usize = 0;
+    let mut num_to: usize = 0;
+    let mut num_minted: usize = 0;
+    let mut most_interacted: Option<(&String, usize)> = None;
+
+    for transfer in &app.transfers.erc721_transfers {
+        let contract = &transfer.contract;
+
+        if let Some(pos) = unique_contracts.iter().position(|&c| c == contract) {
+            interactions_per_contract[pos] += 1;
+        } else {
+            unique_contracts.push(contract);
+            interactions_per_contract.push(1);
+        }
+
+        if transfer.from == "0x0000000000000000000000000000000000000000" {
+            num_minted += 1
+        } else if transfer.to.to_lowercase() == app.query.address.to_lowercase() {
+            num_to += 1;
+        }
+
+        if transfer.from.to_lowercase() == app.query.address.to_lowercase() {
+            num_from += 1;
+        }
+    }
+
+    for (contract, &count) in unique_contracts
+        .iter()
+        .zip(interactions_per_contract.iter())
+    {
+        if most_interacted.is_none() || count > most_interacted.as_ref().unwrap().1 {
+            most_interacted = Some((contract, count));
+        }
+    }
+
+    let avg_interactions_per_contract =
+        app.transfers.erc721_transfers.len() / unique_contracts.len();
+
+    let style = Style::new().yellow();
+    let list_items = [
+        ListItem::new(Line::from(Span::styled(
+            format!(
+                "Total Transfers:               {}",
+                app.transfers.erc721_transfers.len()
+            ),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Outgoing:                      {}", num_from),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Incoming:                      {}", num_to),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Minted:                        {}", num_minted),
             style,
         ))),
         ListItem::new(Line::from(Span::styled(
