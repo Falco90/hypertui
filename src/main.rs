@@ -209,7 +209,15 @@ async fn run_app<'a>(
 }
 
 fn write_to_json(app: &App) -> io::Result<()> {
-    let file = File::create("outputs/output.json")?;
+    let file = File::create(format!(
+        "outputs/{}-{}.json",
+        app.query.address,
+        match app.query.chain {
+            Chain::Mainnet(_) => "mainnet",
+            Chain::Optimism(_) => "optimism",
+            Chain::Arbitrum(_) => "arbitrum",
+        }
+    ))?;
     let mut writer = BufWriter::new(file);
     serde_json::to_writer(&mut writer, &app.transfers)?;
     writer.flush()?;
