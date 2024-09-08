@@ -73,6 +73,19 @@ async fn run_app<'a>(
                 }
             }
 
+            if app.is_saving_json {
+                match key.code {
+                    KeyCode::Char('y') => {
+                        write_to_json(app);
+                        app.is_saving_json = false;
+                    }
+                    KeyCode::Char('n') => {
+                        app.is_saving_json = false;
+                    }
+                    _ => {}
+                }
+            }
+
             match app.current_screen {
                 CurrentScreen::Startup => match key.code {
                     KeyCode::Char('c') => {
@@ -84,8 +97,8 @@ async fn run_app<'a>(
                     KeyCode::Char('c') => {
                         app.current_screen = CurrentScreen::QueryBuilder;
                     }
-                    KeyCode::Char('p') => {
-                        write_to_json(&app)?;
+                    KeyCode::Char('j') => {
+                        app.is_saving_json = true;
                     }
                     KeyCode::Tab => {
                         app.transaction_tabs.next();
@@ -196,7 +209,7 @@ async fn run_app<'a>(
 }
 
 fn write_to_json(app: &App) -> io::Result<()> {
-    let file = File::create("output.json")?;
+    let file = File::create("outputs/output.json")?;
     let mut writer = BufWriter::new(file);
     serde_json::to_writer(&mut writer, &app.transfers)?;
     writer.flush()?;

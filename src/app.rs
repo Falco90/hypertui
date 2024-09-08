@@ -122,6 +122,7 @@ pub enum TransactionTab {
 pub struct App<'a> {
     pub current_screen: CurrentScreen,
     pub is_exiting: bool,
+    pub is_saving_json: bool,
     pub currently_editing: bool,
     pub query: WalletQuery,
     pub transaction_tabs: TabsState<'a>,
@@ -198,6 +199,7 @@ impl<'a> App<'a> {
         App {
             current_screen: CurrentScreen::Startup,
             is_exiting: false,
+            is_saving_json: false,
             currently_editing: false,
             transaction_tabs: TabsState::new(vec![
                 "Regular Transfers",

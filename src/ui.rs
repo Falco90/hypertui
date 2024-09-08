@@ -54,6 +54,10 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
     if app.is_exiting {
         render_exit_popup(frame, app, centered_rect);
     }
+
+    if app.is_saving_json {
+        render_json_popup(frame, app, centered_rect);
+    }
 }
 
 fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -1077,7 +1081,7 @@ fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.current_screen {
         CurrentScreen::Main => {
-            content = "\nUp: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Quit: 'q'"
+            content = "\nUp: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Output JSON: 'j' | Quit: 'q'"
         }
         CurrentScreen::QueryBuilder => {
             content = "\nToggle Edit Mode: 'e' / 'ESC' | Up: \u{21D1} | Down: \u{21D3} | Toggle Field: ENTER | Start Query: 'y' | Quit: 'q'"
@@ -1090,6 +1094,29 @@ fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
         .alignment(Alignment::Center);
 
     frame.render_widget(instructions, area);
+}
+
+fn render_json_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let outer_rect = centered_rect(42, 32, area);
+    let inner_rect = centered_rect(40, 30, area);
+    frame.render_widget(Clear, outer_rect);
+
+    let popup_block = Block::default()
+        .green()
+        .borders(Borders::ALL)
+        .padding(Padding::uniform(1))
+        .style(Style::default().bg(Color::DarkGray));
+
+    let text = Text::styled(
+        "\n\nThe json file will be saved to the outputs folder. \n\n\n\n\n Confirm: 'y' | Cancel: 'n'",
+        Style::new().green(),
+    );
+
+    let exit_paragraph = Paragraph::new(text)
+        .block(popup_block)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
+    frame.render_widget(exit_paragraph, inner_rect);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
