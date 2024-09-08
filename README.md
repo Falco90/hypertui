@@ -1,6 +1,6 @@
-# Hypertui
+# HyperTui
 
-[Hypertui]is a terminal user interface (TUI) for on-chain data on Ethereum. It makes use of Envio's HyperSync feature to query Ethereum and EVM compatible chains.
+HyperTui is a tool that displays on-chain data and analytics in a terminal user interface (TUI)! It makes use of Envio's [HyperSync](https://docs.envio.dev/docs/HyperSync/overview) feature to query Ethereum and EVM compatible chains. It heavily leverages the [Ratatui](https://ratatui.rs/) library to create the UI.
 Hypertui is created during ETHOnline 2024.
 
 ## Installation
@@ -22,7 +22,7 @@ MacOs
 brew install capnp
 ```
 
-## Quickstart
+## Running the Application
 To start the application run
 ```shell
 cargo run
