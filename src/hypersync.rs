@@ -6,12 +6,15 @@ use hypersync_client::{
 };
 use serde_json::Value;
 
-use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer};
+use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer, Transfers};
 fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
 
 pub async fn query<'a>(app: &mut App<'a>) {
+    // Remove data from previous query
+    app.transfers = Transfers::new();
+    
     let mut url = String::new();
     match &app.query.chain {
         Chain::Mainnet(link) => {

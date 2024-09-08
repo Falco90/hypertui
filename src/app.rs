@@ -152,7 +152,7 @@ pub struct Transfers {
 }
 
 impl Transfers {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Transfers {
             regular_transfers: Vec::new(),
             erc20_transfers: Vec::new(),
@@ -232,55 +232,61 @@ impl<'a> App<'a> {
         if let Some(transaction_tab) = self.transaction_tabs.selected() {
             match transaction_tab {
                 TransactionTab::Regular => {
-                    let i = match self.table_states.regular_table.selected() {
-                        Some(i) => {
-                            if i >= self.transfers.regular_transfers.len() - 1 {
-                                0
-                            } else {
-                                i + 1
+                    if !self.transfers.regular_transfers.is_empty() {
+                        let i = match self.table_states.regular_table.selected() {
+                            Some(i) => {
+                                if i >= self.transfers.regular_transfers.len() - 1 {
+                                    0
+                                } else {
+                                    i + 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.regular_table.select(Some(i));
-                    self.scrollbar_states.regular_scrollbar = self
-                        .scrollbar_states
-                        .regular_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.regular_table.select(Some(i));
+                        self.scrollbar_states.regular_scrollbar = self
+                            .scrollbar_states
+                            .regular_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
                 TransactionTab::ERC20 => {
-                    let i = match self.table_states.erc20_table.selected() {
-                        Some(i) => {
-                            if i >= self.transfers.erc20_transfers.len() - 1 {
-                                0
-                            } else {
-                                i + 1
+                    if !self.transfers.erc20_transfers.is_empty() {
+                        let i = match self.table_states.erc20_table.selected() {
+                            Some(i) => {
+                                if i >= self.transfers.erc20_transfers.len() - 1 {
+                                    0
+                                } else {
+                                    i + 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.erc20_table.select(Some(i));
-                    self.scrollbar_states.erc20_scrollbar = self
-                        .scrollbar_states
-                        .erc20_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.erc20_table.select(Some(i));
+                        self.scrollbar_states.erc20_scrollbar = self
+                            .scrollbar_states
+                            .erc20_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
                 TransactionTab::ERC721 => {
-                    let i = match self.table_states.erc721_table.selected() {
-                        Some(i) => {
-                            if i >= self.transfers.erc721_transfers.len() - 1 {
-                                0
-                            } else {
-                                i + 1
+                    if !self.transfers.erc721_transfers.is_empty() {
+                        let i = match self.table_states.erc721_table.selected() {
+                            Some(i) => {
+                                if i >= self.transfers.erc721_transfers.len() - 1 {
+                                    0
+                                } else {
+                                    i + 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.erc721_table.select(Some(i));
-                    self.scrollbar_states.erc721_scrollbar = self
-                        .scrollbar_states
-                        .erc721_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.erc721_table.select(Some(i));
+                        self.scrollbar_states.erc721_scrollbar = self
+                            .scrollbar_states
+                            .erc721_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
             }
         }
@@ -290,55 +296,61 @@ impl<'a> App<'a> {
         if let Some(transaction_tab) = self.transaction_tabs.selected() {
             match transaction_tab {
                 TransactionTab::Regular => {
-                    let i = match self.table_states.regular_table.selected() {
-                        Some(i) => {
-                            if i == 0 {
-                                self.transfers.regular_transfers.len() - 1 * LINE_HEIGHT
-                            } else {
-                                i - 1
+                    if !self.transfers.regular_transfers.is_empty() {
+                        let i = match self.table_states.regular_table.selected() {
+                            Some(i) => {
+                                if i == 0 {
+                                    self.transfers.regular_transfers.len() - 1 * LINE_HEIGHT
+                                } else {
+                                    i - 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.regular_table.select(Some(i));
-                    self.scrollbar_states.regular_scrollbar = self
-                        .scrollbar_states
-                        .regular_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.regular_table.select(Some(i));
+                        self.scrollbar_states.regular_scrollbar = self
+                            .scrollbar_states
+                            .regular_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
                 TransactionTab::ERC20 => {
-                    let i = match self.table_states.erc20_table.selected() {
-                        Some(i) => {
-                            if i == 0 {
-                                self.transfers.erc20_transfers.len() - 1 * LINE_HEIGHT
-                            } else {
-                                i - 1
+                    if !self.transfers.erc20_transfers.is_empty() {
+                        let i = match self.table_states.erc20_table.selected() {
+                            Some(i) => {
+                                if i == 0 {
+                                    self.transfers.erc20_transfers.len() - 1 * LINE_HEIGHT
+                                } else {
+                                    i - 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.erc20_table.select(Some(i));
-                    self.scrollbar_states.erc20_scrollbar = self
-                        .scrollbar_states
-                        .erc20_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.erc20_table.select(Some(i));
+                        self.scrollbar_states.erc20_scrollbar = self
+                            .scrollbar_states
+                            .erc20_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
                 TransactionTab::ERC721 => {
-                    let i = match self.table_states.erc721_table.selected() {
-                        Some(i) => {
-                            if i == 0 {
-                                self.transfers.erc721_transfers.len() - 1 * LINE_HEIGHT
-                            } else {
-                                i - 1
+                    if !self.transfers.erc721_transfers.is_empty() {
+                        let i = match self.table_states.erc721_table.selected() {
+                            Some(i) => {
+                                if i == 0 {
+                                    self.transfers.erc721_transfers.len() - 1 * LINE_HEIGHT
+                                } else {
+                                    i - 1
+                                }
                             }
-                        }
-                        None => 0,
-                    };
-                    self.table_states.erc721_table.select(Some(i));
-                    self.scrollbar_states.erc721_scrollbar = self
-                        .scrollbar_states
-                        .erc721_scrollbar
-                        .position(i * LINE_HEIGHT);
+                            None => 0,
+                        };
+                        self.table_states.erc721_table.select(Some(i));
+                        self.scrollbar_states.erc721_scrollbar = self
+                            .scrollbar_states
+                            .erc721_scrollbar
+                            .position(i * LINE_HEIGHT);
+                    }
                 }
             }
         }
