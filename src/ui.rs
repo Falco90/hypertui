@@ -6,8 +6,8 @@ use ratatui::{
     style::{Color, Style, Stylize},
     text::{self, Line, Span, Text},
     widgets::{
-        Bar, BarChart, BarGroup, Block, Borders, Cell, HighlightSpacing, List, ListItem, Padding,
-        Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs,
+        Bar, BarChart, BarGroup, Block, Borders, Cell, Clear, HighlightSpacing, List, ListItem,
+        Padding, Paragraph, Row, Scrollbar, ScrollbarOrientation, Table, Tabs, Wrap,
     },
     Frame,
 };
@@ -43,12 +43,16 @@ pub fn render_ui(frame: &mut Frame, app: &mut App) {
             render_footer(frame, app, chunks[2]);
         }
         CurrentScreen::Exiting => {
-            render_title(frame, app, chunks[0]);
+            render_exit_popup(frame, app, frame.area());
         }
         CurrentScreen::Loading => {
             render_title(frame, app, chunks[0]);
             render_loading_screen(frame, app, chunks[1]);
         }
+    }
+
+    if app.is_exiting {
+        render_exit_popup(frame, app, centered_rect);
     }
 }
 
@@ -973,6 +977,29 @@ fn render_erc721_metrics(frame: &mut Frame, app: &App, area: Rect) {
     );
 
     frame.render_widget(list, area);
+}
+
+fn render_exit_popup(frame: &mut Frame, app: &mut App, area: Rect) {
+    let outer_rect = centered_rect(42, 32, area);
+    let inner_rect = centered_rect(40, 30, area);
+    frame.render_widget(Clear, outer_rect);
+
+    let popup_block = Block::default()
+        .gray()
+        .borders(Borders::ALL)
+        .padding(Padding::uniform(1))
+        .style(Style::default().bg(Color::DarkGray));
+
+    let exit_text = Text::styled(
+        "\n\nAre you sure you want to exit? \n\n\n\n\n\n Yes: 'y' | No: 'n'",
+        Style::default().fg(Color::Green),
+    );
+
+    let exit_paragraph = Paragraph::new(exit_text)
+        .block(popup_block)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
+    frame.render_widget(exit_paragraph, inner_rect);
 }
 
 fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {

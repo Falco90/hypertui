@@ -57,22 +57,38 @@ async fn run_app<'a>(
             if key.kind == event::KeyEventKind::Release {
                 continue;
             }
+
+            if !app.currently_editing && !app.is_exiting {
+                match app.current_screen {
+                    CurrentScreen::Startup => {}
+                    _ => match key.code {
+                        KeyCode::Char('q') => app.is_exiting = true,
+                        _ => {}
+                    },
+                }
+            }
+
+            if app.is_exiting {
+                match key.code {
+                    KeyCode::Char('y') => return Ok(true),
+                    KeyCode::Char('n') => app.is_exiting = false,
+                    _ => {}
+                }
+            }
+
             match app.current_screen {
                 CurrentScreen::Startup => match key.code {
                     KeyCode::Char('c') => {
                         app.current_screen = CurrentScreen::QueryBuilder;
                     }
                     KeyCode::Char('q') => {
-                        app.current_screen = CurrentScreen::Exiting;
+                        return Ok(true);
                     }
                     _ => {}
                 },
                 CurrentScreen::Main => match key.code {
                     KeyCode::Char('c') => {
                         app.current_screen = CurrentScreen::QueryBuilder;
-                    }
-                    KeyCode::Char('q') => {
-                        app.current_screen = CurrentScreen::Exiting;
                     }
                     KeyCode::Char('p') => {
                         write_to_json(&app)?;
@@ -93,11 +109,6 @@ async fn run_app<'a>(
                         match key.code {
                             KeyCode::Char('y') => {
                                 app.current_screen = CurrentScreen::Loading;
-                            }
-                            KeyCode::Char('q') => {
-                                if !app.currently_editing {
-                                    app.current_screen = CurrentScreen::Startup;
-                                }
                             }
                             KeyCode::Char('e') => {
                                 app.currently_editing = true;
@@ -180,7 +191,7 @@ async fn run_app<'a>(
                         return Ok(true);
                     }
                     KeyCode::Char('n') | KeyCode::Char('q') => {
-                        return Ok(false);
+                        app.current_screen = CurrentScreen::Main;
                     }
                     _ => {}
                 },

@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use ratatui::widgets::{ListState, ScrollbarState, TableState};
 use serde::Serialize;
 
@@ -119,6 +121,7 @@ pub enum TransactionTab {
 }
 pub struct App<'a> {
     pub current_screen: CurrentScreen,
+    pub is_exiting: bool,
     pub currently_editing: bool,
     pub query: WalletQuery,
     pub transaction_tabs: TabsState<'a>,
@@ -194,6 +197,7 @@ impl<'a> App<'a> {
     pub fn new() -> Self {
         App {
             current_screen: CurrentScreen::Startup,
+            is_exiting: false,
             currently_editing: false,
             transaction_tabs: TabsState::new(vec![
                 "Regular Transfers",
