@@ -214,12 +214,18 @@ impl<'a> App<'a> {
     }
 
     pub fn set_scrollbar_states(&mut self) {
-        self.scrollbar_states.regular_scrollbar =
-            ScrollbarState::new(&self.transfers.regular_transfers.len() - 1);
-        self.scrollbar_states.erc20_scrollbar =
-            ScrollbarState::new(&self.transfers.erc20_transfers.len() - 1);
-        self.scrollbar_states.erc721_scrollbar =
-            ScrollbarState::new(&self.transfers.erc721_transfers.len() - 1);
+        if !&self.transfers.regular_transfers.is_empty() {
+            self.scrollbar_states.regular_scrollbar =
+                ScrollbarState::new(&self.transfers.regular_transfers.len() - 1);
+        }
+        if !&self.transfers.erc20_transfers.is_empty() {
+            self.scrollbar_states.erc20_scrollbar =
+                ScrollbarState::new(&self.transfers.erc20_transfers.len() - 1);
+        }
+        if !&self.transfers.erc721_transfers.is_empty() {
+            self.scrollbar_states.erc721_scrollbar =
+                ScrollbarState::new(&self.transfers.erc721_transfers.len() - 1);
+        }
     }
 
     pub fn next_table_row(&mut self) {

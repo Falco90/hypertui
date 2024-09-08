@@ -109,7 +109,8 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         .style(Style::default().green())
         .title(" Processing Query ")
         .title_alignment(Alignment::Center)
-        .borders(Borders::ALL).padding(Padding::uniform(2));
+        .borders(Borders::ALL)
+        .padding(Padding::uniform(2));
 
     let list_items = [
         ListItem::new(Line::from(format!(
@@ -141,14 +142,19 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             "Chain                  {}",
             match app.query.chain {
                 Chain::Mainnet(_) => "Mainnet",
-                Chain::Optimism(_) => "Mainnet",
-                Chain::Arbitrum(_) => "Mainnet",
+                Chain::Optimism(_) => "Optimism",
+                Chain::Arbitrum(_) => "Arbitrum",
             }
         ))),
-        ListItem::new(Line::from(format!("From Block:            {}", app.query.start_block,))),
+        ListItem::new(Line::from(format!(
+            "From Block:            {}",
+            app.query.start_block,
+        ))),
     ];
 
-    let list = List::new(list_items).block(list_block).style(Style::new().yellow());
+    let list = List::new(list_items)
+        .block(list_block)
+        .style(Style::new().yellow());
 
     frame.render_widget(list, pop_up);
 }
@@ -193,7 +199,7 @@ fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let pop_up = centered_rect(60, 60, area);
+    let pop_up = centered_rect(60, 40, area);
 
     let list_items = vec![
         ListItem::new(Line::from(Span::styled(
@@ -248,11 +254,16 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     ];
 
     let list = List::new(list_items)
-        .highlight_symbol("> ")
+        .highlight_symbol(if app.currently_editing { "> " } else { "  " })
         .highlight_spacing(HighlightSpacing::Always)
         .block(
             Block::default()
                 .green()
+                .title(format!(
+                    " Edit Mode: {} ",
+                    if app.currently_editing { "ON" } else { "OFF" }
+                ))
+                .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
                 .padding(Padding::uniform(2)),
         );
@@ -310,135 +321,156 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.transaction_tabs.titles[app.transaction_tabs.index] {
         "Regular Transfers" => {
-            let header = ["Hash", "From", "To", "Value"]
-                .into_iter()
-                .map(Cell::from)
-                .collect::<Row>()
-                .style(header_style)
-                .height(2);
-            let rows = app
-                .transfers
-                .regular_transfers
-                .iter()
-                .enumerate()
-                .map(|(i, data)| {
-                    let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
-                    item.into_iter()
-                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
-                        .collect::<Row>()
-                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                        .height(1)
-                });
+            if !app.transfers.regular_transfers.is_empty() {
+                let header = ["Hash", "From", "To", "Value"]
+                    .into_iter()
+                    .map(Cell::from)
+                    .collect::<Row>()
+                    .style(header_style)
+                    .height(2);
+                let rows = app
+                    .transfers
+                    .regular_transfers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, data)| {
+                        let item = [&data.hash, &data.from, &data.to, &data.value[..5]];
+                        item.into_iter()
+                            .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                            .collect::<Row>()
+                            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                            .height(1)
+                    });
 
-            let table = Table::new(
-                rows,
-                [
-                    Constraint::Length(200),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                ],
-            )
-            .header(header)
-            .block(
-                Block::bordered()
-                    .border_style(Style::new().green())
-                    .padding(Padding::horizontal(2)),
-            )
-            .highlight_style(selected_style)
-            .highlight_spacing(HighlightSpacing::Always);
+                let table = Table::new(
+                    rows,
+                    [
+                        Constraint::Length(200),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                    ],
+                )
+                .header(header)
+                .block(
+                    Block::bordered()
+                        .border_style(Style::new().green())
+                        .padding(Padding::horizontal(2)),
+                )
+                .highlight_style(selected_style)
+                .highlight_spacing(HighlightSpacing::Always);
 
-            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
-            render_regular_metrics(frame, app, bottom_right_panel[0]);
-            render_bar_chart(frame, app, bottom_right_panel[1]);
+                frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
+                render_scrollbar(frame, app, chunks[0]);
+                render_tansaction_details(frame, app, right_panel[0]);
+                render_regular_metrics(frame, app, bottom_right_panel[0]);
+                render_bar_chart(frame, app, bottom_right_panel[1]);
+            } else {
+                let text = Text::from(format!("\n\n\nNo regular transfers found."));
+                let paragraph = Paragraph::new(text).alignment(Alignment::Center);
+                frame.render_widget(paragraph, area);
+            }
         }
         "ERC20 Transfers" => {
-            let header = ["Hash", "From", "To", "Value"]
-                .into_iter()
-                .map(Cell::from)
-                .collect::<Row>()
-                .style(header_style)
-                .height(2);
-            let rows = app
-                .transfers
-                .erc20_transfers
-                .iter()
-                .enumerate()
-                .map(|(i, data)| {
-                    let item = [&data.hash, &data.from, &data.to, &data.amount];
-                    item.into_iter()
-                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
-                        .collect::<Row>()
-                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                        .height(1)
-                });
-            let table = Table::new(
-                rows,
-                [
-                    Constraint::Length(200),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                ],
-            )
-            .header(header)
-            .block(
-                Block::bordered()
-                    .border_style(Style::new().green())
-                    .padding(Padding::horizontal(2)),
-            )
-            .highlight_style(selected_style)
-            .highlight_spacing(HighlightSpacing::Always);
-            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
-            render_erc20_metrics(frame, app, bottom_right_panel[0]);
-            render_erc20_chart(frame, app, bottom_right_panel[1]);
+            if !app.transfers.erc20_transfers.is_empty() {
+                let header = ["Hash", "From", "To", "Value"]
+                    .into_iter()
+                    .map(Cell::from)
+                    .collect::<Row>()
+                    .style(header_style)
+                    .height(2);
+                let rows = app
+                    .transfers
+                    .erc20_transfers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, data)| {
+                        let item = [&data.hash, &data.from, &data.to, &data.amount];
+                        item.into_iter()
+                            .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                            .collect::<Row>()
+                            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                            .height(1)
+                    });
+                let table = Table::new(
+                    rows,
+                    [
+                        Constraint::Length(200),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                    ],
+                )
+                .header(header)
+                .block(
+                    Block::bordered()
+                        .border_style(Style::new().green())
+                        .padding(Padding::horizontal(2)),
+                )
+                .highlight_style(selected_style)
+                .highlight_spacing(HighlightSpacing::Always);
+                frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
+                render_scrollbar(frame, app, chunks[0]);
+                render_tansaction_details(frame, app, right_panel[0]);
+                render_erc20_metrics(frame, app, bottom_right_panel[0]);
+                render_erc20_chart(frame, app, bottom_right_panel[1]);
+            } else {
+                let text = Text::from(format!("\n\n\nNo ERC20 transfers found."));
+                let paragraph = Paragraph::new(text).alignment(Alignment::Center);
+                frame.render_widget(paragraph, area);
+            }
         }
         "ERC721 Transfers" => {
-            let header = ["Hash", "From", "To", "TokenId"]
-                .into_iter()
-                .map(Cell::from)
-                .collect::<Row>()
-                .style(header_style)
-                .height(2);
-            let rows = app
-                .transfers
-                .erc721_transfers
-                .iter()
-                .enumerate()
-                .map(|(i, data)| {
-                    let item = [&data.hash, &data.from, &data.to, &data.token_id];
-                    item.into_iter()
-                        .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
-                        .collect::<Row>()
-                        .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
-                        .height(1)
-                });
-            let table = Table::new(
-                rows,
-                [
-                    Constraint::Length(200),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                    Constraint::Length(40),
-                ],
-            )
-            .header(header)
-            .block(
-                Block::bordered()
-                    .border_style(Style::new().green())
-                    .padding(Padding::horizontal(2)),
-            )
-            .highlight_style(selected_style)
-            .highlight_spacing(HighlightSpacing::Always);
-            frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
-            render_erc721_metrics(frame, app, bottom_right_panel[0]);
-            render_erc721_chart(frame, app, bottom_right_panel[1]);
+            if !app.transfers.erc721_transfers.is_empty() {
+                let header = ["Hash", "From", "To", "TokenId"]
+                    .into_iter()
+                    .map(Cell::from)
+                    .collect::<Row>()
+                    .style(header_style)
+                    .height(2);
+                let rows = app
+                    .transfers
+                    .erc721_transfers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, data)| {
+                        let item = [&data.hash, &data.from, &data.to, &data.token_id];
+                        item.into_iter()
+                            .map(|content| Cell::from(Text::from(format!("{}", truncate(content)))))
+                            .collect::<Row>()
+                            .style(Style::new().fg(Color::Yellow).bg(Color::DarkGray))
+                            .height(1)
+                    });
+                let table = Table::new(
+                    rows,
+                    [
+                        Constraint::Length(200),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                        Constraint::Length(40),
+                    ],
+                )
+                .header(header)
+                .block(
+                    Block::bordered()
+                        .border_style(Style::new().green())
+                        .padding(Padding::horizontal(2)),
+                )
+                .highlight_style(selected_style)
+                .highlight_spacing(HighlightSpacing::Always);
+                frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc721_table);
+                render_scrollbar(frame, app, chunks[0]);
+                render_tansaction_details(frame, app, right_panel[0]);
+                render_erc721_metrics(frame, app, bottom_right_panel[0]);
+                render_erc721_chart(frame, app, bottom_right_panel[1]);
+            } else {
+                let text = Text::from(format!("\n\n\nNo ERC721 transfers found."));
+                let paragraph = Paragraph::new(text).alignment(Alignment::Center);
+                frame.render_widget(paragraph, area);
+            }
         }
         _ => {}
     }
-
-    render_scrollbar(frame, app, chunks[0]);
-    render_tansaction_details(frame, app, right_panel[0]);
 }
 
 fn render_scrollbar(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -519,16 +551,18 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
             }
         }
         2 => {
-            if let Some(index) = app.table_states.erc721_table.selected() {
-                let selected_transaction = &app.transfers.erc721_transfers[index];
-                fields = vec![
-                    ("Hash:    ", selected_transaction.hash.as_str()),
-                    ("Block:   ", selected_transaction.block.as_str()),
-                    ("Contract:", selected_transaction.contract.as_str()),
-                    ("From:    ", selected_transaction.from.as_str()),
-                    ("To:      ", selected_transaction.to.as_str()),
-                    ("TokenId: ", &selected_transaction.token_id),
-                ];
+            if !app.transfers.erc721_transfers.is_empty() {
+                if let Some(index) = app.table_states.erc721_table.selected() {
+                    let selected_transaction = &app.transfers.erc721_transfers[index];
+                    fields = vec![
+                        ("Hash:    ", selected_transaction.hash.as_str()),
+                        ("Block:   ", selected_transaction.block.as_str()),
+                        ("Contract:", selected_transaction.contract.as_str()),
+                        ("From:    ", selected_transaction.from.as_str()),
+                        ("To:      ", selected_transaction.to.as_str()),
+                        ("TokenId: ", &selected_transaction.token_id),
+                    ];
+                }
             }
         }
         _ => {}
@@ -652,7 +686,7 @@ fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
 
     sorted_contracts.sort_by(|a, b| b.1.cmp(&a.1));
 
-    let bars: Vec<Bar> = sorted_contracts[..12]
+    let bars: Vec<Bar> = sorted_contracts
         .iter()
         .map(|v| *v)
         .enumerate()
@@ -711,7 +745,7 @@ fn render_erc721_chart(frame: &mut Frame, app: &App, area: Rect) {
 
     sorted_contracts.sort_by(|a, b| b.1.cmp(&a.1));
 
-    let bars: Vec<Bar> = sorted_contracts[..12]
+    let bars: Vec<Bar> = sorted_contracts
         .iter()
         .map(|v| *v)
         .enumerate()
