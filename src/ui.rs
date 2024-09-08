@@ -68,11 +68,18 @@ fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         .split(chunks[0]);
     render_tabs(frame, app, top_bar[0]);
 
-    let text = Text::from(Span::styled(format!("{} | {}", truncate(&app.query.address), match app.query.chain {
-        Chain::Mainnet(_) => "Mainnet",
-        Chain::Optimism(_) => "Optimism",
-        Chain::Arbitrum(_) => "Arbitrum"
-    }), Style::new().green()));
+    let text = Text::from(Span::styled(
+        format!(
+            "{} | {}",
+            truncate(&app.query.address),
+            match app.query.chain {
+                Chain::Mainnet(_) => "Mainnet",
+                Chain::Optimism(_) => "Optimism",
+                Chain::Arbitrum(_) => "Arbitrum",
+            }
+        ),
+        Style::new().green(),
+    ));
 
     frame.render_widget(text, top_bar[1]);
     render_transaction_tab(frame, app, chunks[1]);
@@ -84,7 +91,7 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.current_screen {
         CurrentScreen::QueryBuilder => content = "\n:: Create Query ::",
-        CurrentScreen::Loading => content = "\n:: Processing Query ::",
+        CurrentScreen::Loading => content = "\n:: Loading ::",
         CurrentScreen::Main => content = "\n:: Query Results ::",
         _ => {}
     }
@@ -97,37 +104,53 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 }
 
 fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
-    let pop_up = centered_rect(60, 60, area);
-    let title_block = Block::default().style(Style::default().green());
+    let pop_up = centered_rect(60, 40, area);
+    let list_block = Block::default()
+        .style(Style::default().green())
+        .title(" Processing Query ")
+        .title_alignment(Alignment::Center)
+        .borders(Borders::ALL).padding(Padding::uniform(2));
 
-    let text = Paragraph::new(Text::styled(
-        format!(
-            "HyperSync is fetching {} {} {} \nfrom block {} on \n{}...",
+    let list_items = [
+        ListItem::new(Line::from(format!(
+            "Wallet Address:        {}",
+            app.query.address
+        ))),
+        ListItem::new(Line::from(format!(
+            "Regular Transfers:     {}",
             match app.query.regular_transfers {
-                true => "\nRegular Transfers",
-                false => "",
-            },
+                true => "\u{2714}",
+                false => "\u{2A2F}",
+            }
+        ))),
+        ListItem::new(Line::from(format!(
+            "ERC20 Transfers:       {}",
             match app.query.erc20_transfers {
-                true => "\nERC20 Transfers",
-                false => "",
-            },
+                true => "\u{2714}",
+                false => "\u{2A2F}",
+            }
+        ))),
+        ListItem::new(Line::from(format!(
+            "ERC721 Transfers:      {}",
             match app.query.erc721_transfers {
-                true => "\nERC721 Transfers",
-                false => "",
-            },
-            app.query.start_block,
+                true => "\u{2714}",
+                false => "\u{2A2F}",
+            }
+        ))),
+        ListItem::new(Line::from(format!(
+            "Chain                  {}",
             match app.query.chain {
                 Chain::Mainnet(_) => "Mainnet",
                 Chain::Optimism(_) => "Mainnet",
                 Chain::Arbitrum(_) => "Mainnet",
             }
-        ),
-        Style::default().fg(Color::Yellow),
-    ))
-    .block(title_block)
-    .alignment(Alignment::Center);
+        ))),
+        ListItem::new(Line::from(format!("From Block:            {}", app.query.start_block,))),
+    ];
 
-    frame.render_widget(text, pop_up);
+    let list = List::new(list_items).block(list_block).style(Style::new().yellow());
+
+    frame.render_widget(list, pop_up);
 }
 
 fn render_startup_screen(frame: &mut Frame, app: &mut App, area: Rect) {
