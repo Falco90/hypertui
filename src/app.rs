@@ -165,7 +165,7 @@ pub struct TableStates {
 }
 
 impl TableStates {
-    fn new() -> Self {
+    pub fn new() -> Self {
         TableStates {
             regular_table: TableState::default().with_selected(0),
             erc20_table: TableState::default().with_selected(0),
@@ -181,7 +181,7 @@ pub struct ScrollbarStates {
 }
 
 impl ScrollbarStates {
-    fn new() -> Self {
+    pub fn new() -> Self {
         ScrollbarStates {
             regular_scrollbar: ScrollbarState::new(0),
             erc20_scrollbar: ScrollbarState::new(0),

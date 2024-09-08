@@ -89,7 +89,7 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
 
     match app.current_screen {
         CurrentScreen::QueryBuilder => content = "\n:: Create Query ::",
-        CurrentScreen::Loading => content = "\n:: Loading ::",
+        CurrentScreen::Loading => content = "\n:: Processing Query ::",
         CurrentScreen::Main => content = "\n:: Query Results ::",
         _ => {}
     }
@@ -105,39 +105,39 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
     let pop_up = centered_rect(60, 40, area);
     let list_block = Block::default()
         .style(Style::default().green())
-        .title(" Processing Query ")
+        .title(" Loading ")
         .title_alignment(Alignment::Center)
         .borders(Borders::ALL)
-        .padding(Padding::uniform(2));
+        .padding(Padding::symmetric(4, 2));
 
     let list_items = [
         ListItem::new(Line::from(format!(
-            "Wallet Address:        {}",
+            "Wallet Address:            {}",
             app.query.address
         ))),
         ListItem::new(Line::from(format!(
-            "Regular Transfers:     {}",
+            "Regular Transfers:         {}",
             match app.query.regular_transfers {
                 true => "\u{2714}",
                 false => "\u{2A2F}",
             }
         ))),
         ListItem::new(Line::from(format!(
-            "ERC20 Transfers:       {}",
+            "ERC20 Transfers:           {}",
             match app.query.erc20_transfers {
                 true => "\u{2714}",
                 false => "\u{2A2F}",
             }
         ))),
         ListItem::new(Line::from(format!(
-            "ERC721 Transfers:      {}",
+            "ERC721 Transfers:          {}",
             match app.query.erc721_transfers {
                 true => "\u{2714}",
                 false => "\u{2A2F}",
             }
         ))),
         ListItem::new(Line::from(format!(
-            "Chain                  {}",
+            "Chain:                     {}",
             match app.query.chain {
                 Chain::Mainnet(_) => "Mainnet",
                 Chain::Optimism(_) => "Optimism",
@@ -145,7 +145,7 @@ fn render_loading_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             }
         ))),
         ListItem::new(Line::from(format!(
-            "From Block:            {}",
+            "From Block:                {}",
             app.query.start_block,
         ))),
     ];

@@ -6,7 +6,7 @@ use hypersync_client::{
 };
 use serde_json::Value;
 
-use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer, Transfers};
+use crate::app::{App, Chain, Erc20Transfer, Erc721Transfer, RegularTransfer, ScrollbarStates, TableStates, Transfers};
 fn address_to_topic(address: &str) -> String {
     format!("0x000000000000000000000000{}", &address[2..])
 }
@@ -14,6 +14,9 @@ fn address_to_topic(address: &str) -> String {
 pub async fn query<'a>(app: &mut App<'a>) {
     // Remove data from previous query
     app.transfers = Transfers::new();
+    // Reset tables and scrollbars
+    app.table_states = TableStates::new();
+    app.scrollbar_states = ScrollbarStates::new();
 
     let client = Client::new(ClientConfig {
         url: Some(
