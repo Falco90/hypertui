@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use ethers::core::utils::format_ether;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Margin, Rect},
@@ -10,7 +12,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::app::{App, Chain, CurrentScreen};
+use crate::app::{App, Chain, CurrentScreen, TransactionTab};
 
 pub fn render_ui(frame: &mut Frame, app: &mut App) {
     let centered_rect = centered_rect(95, 95, frame.area());
@@ -249,10 +251,20 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
         .split(chunks[1]);
 
-    let bottom_right_panel = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
-        .split(right_panel[1]);
+    let bottom_right_panel = match app.transaction_tabs.selected().unwrap() {
+        TransactionTab::Regular => Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .split(right_panel[1]),
+        TransactionTab::ERC20 => Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(right_panel[1]),
+        TransactionTab::ERC721 => Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Percentage(40), Constraint::Percentage(60)])
+            .split(right_panel[1]),
+    };
 
     let header_style = Style::default().fg(Color::LightGreen).bg(Color::DarkGray);
     let selected_style = Style::default().fg(Color::DarkGray).bg(Color::Yellow);
@@ -298,7 +310,7 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .highlight_spacing(HighlightSpacing::Always);
 
             frame.render_stateful_widget(table, chunks[0], &mut app.table_states.regular_table);
-            render_regular_statistics(frame, app, bottom_right_panel[0]);
+            render_regular_metrics(frame, app, bottom_right_panel[0]);
             render_bar_chart(frame, app, bottom_right_panel[1]);
         }
         "ERC20 Transfers" => {
@@ -339,6 +351,8 @@ fn render_transaction_tab(frame: &mut Frame, app: &mut App, area: Rect) {
             .highlight_style(selected_style)
             .highlight_spacing(HighlightSpacing::Always);
             frame.render_stateful_widget(table, chunks[0], &mut app.table_states.erc20_table);
+            render_erc20_metrics(frame, app, bottom_right_panel[0]);
+            render_erc20_chart(frame, app, bottom_right_panel[1]);
         }
         "ERC721 Transfers" => {
             let header = ["Hash", "From", "To", "TokenId"]
@@ -572,7 +586,66 @@ fn render_bar_chart(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(bar_chart, area)
 }
 
-fn render_regular_statistics(frame: &mut Frame, app: &mut App, area: Rect) {
+fn render_erc20_chart(frame: &mut Frame, app: &App, area: Rect) {
+    let mut unique_contracts: Vec<&String> = Vec::new();
+    let mut interactions_per_contract: Vec<usize> = Vec::new();
+    let mut most_interacted: Option<(&String, usize)> = None;
+
+    for transfer in &app.transfers.erc20_transfers {
+        let contract = &transfer.contract;
+
+        if let Some(pos) = unique_contracts.iter().position(|&c| c == contract) {
+            interactions_per_contract[pos] += 1;
+        } else {
+            unique_contracts.push(contract);
+            interactions_per_contract.push(1);
+        }
+    }
+
+    let mut sorted_contracts = unique_contracts
+        .iter()
+        .zip(interactions_per_contract.iter())
+        .collect::<Vec<(&&String, &usize)>>();
+
+    sorted_contracts.sort_by(|a, b| b.1.cmp(&a.1));
+
+    let bars: Vec<Bar> = sorted_contracts[..12]
+        .iter()
+        .map(|v| *v)
+        .enumerate()
+        .map(|(i, value)| {
+            Bar::default()
+                .value(*value.1 as u64)
+                .label(Line::from(format!(
+                    "{}",
+                    match i {
+                        _ => truncate(value.0),
+                    }
+                )))
+                .text_value(format!("{}", value.1.to_string()))
+                .style(Style::new().yellow())
+                .value_style(Style::new())
+        })
+        .collect();
+    let title = Line::from("Most interactions").centered();
+
+    let bar_chart = BarChart::default()
+        .data(BarGroup::default().bars(&bars))
+        .direction(Direction::Horizontal)
+        .bar_width(1)
+        .bar_gap(0)
+        .block(
+            Block::new()
+                .title(title)
+                .borders(Borders::ALL)
+                .style(Style::new().green())
+                .padding(Padding::uniform(1))
+        );
+
+    frame.render_widget(bar_chart, area)
+}
+
+fn render_regular_metrics(frame: &mut Frame, app: &mut App, area: Rect) {
     let style = Style::new().yellow();
     let mut total_sent: f64 = 0.0;
     let mut num_sent: usize = 0;
@@ -667,6 +740,86 @@ fn render_regular_statistics(frame: &mut Frame, app: &mut App, area: Rect) {
             .title_alignment(Alignment::Center)
             .green()
             .borders(Borders::ALL)
+            .padding(Padding::symmetric(2, 1)),
+    );
+
+    frame.render_widget(list, area);
+}
+
+fn render_erc20_metrics(frame: &mut Frame, app: &App, area: Rect) {
+    let mut unique_contracts: Vec<&String> = Vec::new();
+    let mut interactions_per_contract: Vec<usize> = Vec::new();
+    let mut num_from: usize = 0;
+    let mut num_to: usize = 0;
+    let mut most_interacted: Option<(&String, usize)> = None;
+
+    for transfer in &app.transfers.erc20_transfers {
+        let contract = &transfer.contract;
+
+        if let Some(pos) = unique_contracts.iter().position(|&c| c == contract) {
+            interactions_per_contract[pos] += 1;
+        } else {
+            unique_contracts.push(contract);
+            interactions_per_contract.push(1);
+        }
+
+        if transfer.from.to_lowercase() == app.query.address.to_lowercase() {
+            num_from += 1;
+        }
+
+        if transfer.to.to_lowercase() == app.query.address.to_lowercase() {
+            num_to += 1;
+        }
+    }
+
+    for (contract, &count) in unique_contracts
+        .iter()
+        .zip(interactions_per_contract.iter())
+    {
+        if most_interacted.is_none() || count > most_interacted.as_ref().unwrap().1 {
+            most_interacted = Some((contract, count));
+        }
+    }
+
+    let avg_interactions_per_contract =
+        app.transfers.erc20_transfers.len() / unique_contracts.len();
+
+    let style = Style::new().yellow();
+    let list_items = [
+        ListItem::new(Line::from(Span::styled(
+            format!(
+                "Total Transfers:               {}",
+                app.transfers.erc20_transfers.len()
+            ),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Outgoing:                      {}", num_from),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Incoming:                      {}", num_to),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!("Unique Contracts:              {}", unique_contracts.len()),
+            style,
+        ))),
+        ListItem::new(Line::from(Span::styled(
+            format!(
+                "Avg Transfers Per Contract:    {}",
+                avg_interactions_per_contract
+            ),
+            style,
+        ))),
+    ];
+
+    let list = List::new(list_items).block(
+        Block::default()
+            .borders(Borders::ALL)
+            .green()
+            .title("Metrics")
+            .title_alignment(Alignment::Center)
             .padding(Padding::symmetric(2, 1)),
     );
 
