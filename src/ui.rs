@@ -206,7 +206,7 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         ))),
         ListItem::new(Line::from(Span::styled(
             format!(
-                "Regular transfers:         {}",
+                "Regular Transfers:         {}",
                 match app.query.regular_transfers {
                     true => "Yes",
                     false => "No",
@@ -216,7 +216,7 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         ))),
         ListItem::new(Line::from(Span::styled(
             format!(
-                "ERC20 transfers:           {}",
+                "ERC20 Transfers:           {}",
                 match app.query.erc20_transfers {
                     true => "Yes",
                     false => "No",
@@ -226,7 +226,7 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         ))),
         ListItem::new(Line::from(Span::styled(
             format!(
-                "ERC721 transfers:          {}",
+                "ERC721 Transfers:          {}",
                 match app.query.erc721_transfers {
                     true => "Yes",
                     false => "No",
@@ -246,7 +246,7 @@ fn render_query_screen(frame: &mut Frame, app: &mut App, area: Rect) {
             Style::default().fg(Color::Yellow),
         ))),
         ListItem::new(Line::from(Span::styled(
-            format!("From block:                {}", app.query.start_block),
+            format!("From Block:                {}", app.query.start_block),
             Style::default().fg(Color::Yellow),
         ))),
     ];
@@ -544,7 +544,7 @@ fn render_tansaction_details(frame: &mut Frame, app: &mut App, area: Rect) {
                     ("Contract:", selected_transaction.contract.as_str()),
                     ("From:    ", selected_transaction.from.as_str()),
                     ("To:      ", selected_transaction.to.as_str()),
-                    ("Amount:  ", &selected_transaction.amount[..5]),
+                    ("Amount:  ", &selected_transaction.amount),
                 ];
             }
         }
