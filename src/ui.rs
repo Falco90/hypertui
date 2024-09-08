@@ -62,7 +62,19 @@ fn render_main_screen(frame: &mut Frame, app: &mut App, area: Rect) {
         .constraints([Constraint::Length(2), Constraint::Min(1)])
         .split(area);
 
-    render_tabs(frame, app, chunks[0]);
+    let top_bar = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(80), Constraint::Percentage(20)])
+        .split(chunks[0]);
+    render_tabs(frame, app, top_bar[0]);
+
+    let text = Text::from(Span::styled(format!("{} | {}", truncate(&app.query.address), match app.query.chain {
+        Chain::Mainnet(_) => "Mainnet",
+        Chain::Optimism(_) => "Optimism",
+        Chain::Arbitrum(_) => "Arbitrum"
+    }), Style::new().green()));
+
+    frame.render_widget(text, top_bar[1]);
     render_transaction_tab(frame, app, chunks[1]);
 }
 
@@ -71,7 +83,7 @@ fn render_title(frame: &mut Frame, app: &mut App, area: Rect) {
     let mut content = "";
 
     match app.current_screen {
-        CurrentScreen::QueryBuilder => content = "\n:: Query Builder ::",
+        CurrentScreen::QueryBuilder => content = "\n:: Create Query ::",
         CurrentScreen::Loading => content = "\n:: Processing Query ::",
         CurrentScreen::Main => content = "\n:: Query Results ::",
         _ => {}
@@ -985,7 +997,7 @@ fn render_exit_popup(frame: &mut Frame, app: &mut App, area: Rect) {
     frame.render_widget(Clear, outer_rect);
 
     let popup_block = Block::default()
-        .gray()
+        .green()
         .borders(Borders::ALL)
         .padding(Padding::uniform(1))
         .style(Style::default().bg(Color::DarkGray));
@@ -1011,7 +1023,7 @@ fn render_footer(frame: &mut Frame, app: &mut App, area: Rect) {
             content = "\nUp: \u{21D1} | Down: \u{21D3} | Next Tab: TAB | Quit: 'q'"
         }
         CurrentScreen::QueryBuilder => {
-            content = "\nEdit Mode: 'e' | Up: \u{21D1} | Down: \u{21D3} | Confirm: ENTER"
+            content = "\nToggle Edit Mode: 'e' / 'ESC' | Up: \u{21D1} | Down: \u{21D3} | Toggle Field: ENTER | Start Query: 'y' | Quit: 'q'"
         }
         _ => {}
     }

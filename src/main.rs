@@ -59,12 +59,9 @@ async fn run_app<'a>(
             }
 
             if !app.currently_editing && !app.is_exiting {
-                match app.current_screen {
-                    CurrentScreen::Startup => {}
-                    _ => match key.code {
-                        KeyCode::Char('q') => app.is_exiting = true,
-                        _ => {}
-                    },
+                match key.code {
+                    KeyCode::Char('q') => app.is_exiting = true,
+                    _ => {}
                 }
             }
 
@@ -80,9 +77,6 @@ async fn run_app<'a>(
                 CurrentScreen::Startup => match key.code {
                     KeyCode::Char('c') => {
                         app.current_screen = CurrentScreen::QueryBuilder;
-                    }
-                    KeyCode::Char('q') => {
-                        return Ok(true);
                     }
                     _ => {}
                 },
